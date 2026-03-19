@@ -3,9 +3,17 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../config/app_colors.dart';
 import '../../core/widgets/widgets.dart';
+import '../recipes/cocktails/cocktails_list_screen.dart';
 
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   static const _mostPopularCocktails = [
     ('assets/images/Old-Fashioned.webp', 'Old Fashioned', 4.3),
@@ -23,12 +31,14 @@ class HomeTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: const Color(0xFFF5F5F5),
+      endDrawer: const _CategoryDrawer(),
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
             child: _HomeHeader(
-              onMenuTap: () {},
+              onMenuTap: () => _scaffoldKey.currentState?.openEndDrawer(),
               onSearchChanged: (_) {},
             ),
           ),
@@ -49,7 +59,11 @@ class HomeTab extends StatelessWidget {
                   const SizedBox(height: 32),
                   SectionHeader(
                     title: 'Most Popular',
-                    seeAllOnTap: () {},
+                    seeAllOnTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const CocktailsListScreen(),
+                      ),
+                    ),
                   ),
                   SizedBox(
                     height: 200,
@@ -72,7 +86,11 @@ class HomeTab extends StatelessWidget {
                   const SizedBox(height: 32),
                   SectionHeader(
                     title: 'Newly Added',
-                    seeAllOnTap: () {},
+                    seeAllOnTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const CocktailsListScreen(),
+                      ),
+                    ),
                   ),
                   SizedBox(
                     height: 200,
@@ -203,4 +221,83 @@ class _CurvedBottomClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+class _CategoryDrawer extends StatelessWidget {
+  const _CategoryDrawer();
+
+  static const _categories = [
+    'Sandwiches',
+    'Cocktails',
+    'Pasta',
+    'Meat',
+    'Seafood',
+    'Dessert',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final topPadding = MediaQuery.paddingOf(context).top;
+    final theme = Theme.of(context);
+
+    return Drawer(
+      shape: const RoundedRectangleBorder(),
+      child: Column(
+        children: [
+          // Blue header area matching the app bar height
+          Container(
+            color: AppColors.primary,
+            padding: EdgeInsets.only(top: topPadding > 0 ? topPadding : 16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(
+                      Icons.menu,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Category list
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              itemCount: _categories.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final category = _categories[index];
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+                  title: Text(
+                    category,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop(); // close drawer
+                    if (category == 'Cocktails') {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const CocktailsListScreen(),
+                        ),
+                      );
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

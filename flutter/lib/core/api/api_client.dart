@@ -48,6 +48,123 @@ class ApiClient {
     }
   }
 
+  /// GET with optional Authorization header. Returns parsed JSON map.
+  Future<Map<String, dynamic>> get(
+    String path, {
+    String? authToken,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      final response = await _dio.get<String>(
+        path,
+        queryParameters: queryParameters,
+        options: Options(
+          headers: {
+            if (authToken != null) 'Authorization': authToken,
+          },
+        ),
+      );
+
+      if (response.statusCode == 404) {
+        throw ApiException(
+          'Endpoint not found: ${response.realUri} (HTTP 404).',
+        );
+      }
+
+      return _parseJson(response.data!);
+    } on ApiException {
+      rethrow;
+    } on DioException catch (e) {
+      throw ApiException('Network error: ${e.message}');
+    }
+  }
+
+  /// POST with JSON body and Authorization header.
+  Future<Map<String, dynamic>> jsonPost(
+    String path, {
+    Map<String, dynamic>? data,
+    String? authToken,
+  }) async {
+    try {
+      final response = await _dio.post<String>(
+        path,
+        data: jsonEncode(data),
+        options: Options(
+          contentType: Headers.jsonContentType,
+          headers: {
+            if (authToken != null) 'Authorization': authToken,
+          },
+        ),
+      );
+
+      if (response.statusCode == 404) {
+        throw ApiException(
+          'Endpoint not found: ${response.realUri} (HTTP 404).',
+        );
+      }
+
+      return _parseJson(response.data!);
+    } on ApiException {
+      rethrow;
+    } on DioException catch (e) {
+      throw ApiException('Network error: ${e.message}');
+    }
+  }
+
+  /// POST with multipart form data (for file uploads).
+  Future<Map<String, dynamic>> multipartPost(
+    String path, {
+    required FormData formData,
+    String? authToken,
+  }) async {
+    try {
+      final response = await _dio.post<String>(
+        path,
+        data: formData,
+        options: Options(
+          contentType: Headers.multipartFormDataContentType,
+          headers: {
+            if (authToken != null) 'Authorization': authToken,
+          },
+        ),
+      );
+
+      if (response.statusCode == 404) {
+        throw ApiException(
+          'Endpoint not found: ${response.realUri} (HTTP 404).',
+        );
+      }
+
+      return _parseJson(response.data!);
+    } on ApiException {
+      rethrow;
+    } on DioException catch (e) {
+      throw ApiException('Network error: ${e.message}');
+    }
+  }
+
+  /// POST multipart form data to an external URL (e.g. S3 presigned upload).
+  /// Returns the raw response body as a string (S3 returns XML).
+  Future<String> externalMultipartPost(
+    String url, {
+    required FormData formData,
+  }) async {
+    try {
+      final response = await Dio().post<String>(
+        url,
+        data: formData,
+        options: Options(
+          contentType: Headers.multipartFormDataContentType,
+          responseType: ResponseType.plain,
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+      return response.data ?? '';
+    } on DioException catch (e) {
+      throw ApiException('Upload failed: ${e.message}');
+    }
+  }
+
   Map<String, dynamic> _parseJson(String body) {
     try {
       final data = jsonDecode(body);

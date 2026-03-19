@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../config/app_colors.dart';
 import '../authentication/bloc/auth_bloc.dart';
 import '../authentication/bloc/auth_state.dart';
+import '../recipes/cocktails/add_cocktail_screen.dart';
 import '../welcome/welcome_screen.dart';
 import 'home_tab.dart';
 import 'profile_tab.dart';
@@ -43,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: const [
           HomeTab(),
           _PlaceholderTab(label: 'Messages'),
-          _PlaceholderTab(label: 'Add'),
+          AddCocktailScreen(),
           _PlaceholderTab(label: 'Favorites'),
           ProfileTab(),
         ],
