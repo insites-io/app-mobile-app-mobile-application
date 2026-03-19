@@ -1,0 +1,8 @@
+# OS files
+.DS_Store
+
+# Claude Code
+.claude/
+
+# Design assets
+design-assets/
