@@ -151,6 +151,12 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<CocktailBloc, CocktailState>(
+      listenWhen: (_, current) {
+        if (_isEditing) {
+          return current is CocktailUpdateSuccess || current is CocktailError;
+        }
+        return current is CocktailAddSuccess || current is CocktailError;
+      },
       listener: (context, state) {
         if (state is CocktailAddSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(

@@ -50,6 +50,9 @@ class CocktailBloc extends Bloc<CocktailEvent, CocktailState> {
         imagePath: event.imagePath,
       );
       emit(const CocktailAddSuccess());
+      // Auto-reload list so it's fresh when navigating back
+      final cocktails = await cocktailRepository.getCocktails();
+      emit(CocktailsLoaded(cocktails));
     } on ApiException catch (e) {
       emit(CocktailError(e.message));
     } catch (e) {
@@ -77,6 +80,9 @@ class CocktailBloc extends Bloc<CocktailEvent, CocktailState> {
         imagePath: event.imagePath,
       );
       emit(CocktailUpdateSuccess(updated));
+      // Auto-reload list so it's fresh when navigating back
+      final cocktails = await cocktailRepository.getCocktails();
+      emit(CocktailsLoaded(cocktails));
     } on ApiException catch (e) {
       emit(CocktailError(e.message));
     } catch (e) {

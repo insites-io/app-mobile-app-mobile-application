@@ -23,12 +23,14 @@ class CocktailDetailScreen extends StatefulWidget {
 class _CocktailDetailScreenState extends State<CocktailDetailScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  late Cocktail _cocktail;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() => setState(() {}));
+    _cocktail = widget.cocktail;
   }
 
   @override
@@ -40,7 +42,7 @@ class _CocktailDetailScreenState extends State<CocktailDetailScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final cocktail = widget.cocktail;
+    final cocktail = _cocktail;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -54,13 +56,17 @@ class _CocktailDetailScreenState extends State<CocktailDetailScreen>
                   // ── Hero Image ──
                   _HeroImage(
                     cocktail: cocktail,
-                    onEdit: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
+                    onEdit: () async {
+                      final updated =
+                          await Navigator.of(context).push<Cocktail>(
+                        MaterialPageRoute<Cocktail>(
                           builder: (_) =>
                               AddCocktailScreen(cocktail: cocktail),
                         ),
                       );
+                      if (updated != null) {
+                        setState(() => _cocktail = updated);
+                      }
                     },
                   ),
 
