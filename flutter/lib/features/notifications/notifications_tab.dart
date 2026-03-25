@@ -21,7 +21,7 @@ class NotificationsTab extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          const AppHeader(title: 'Notifications'),
+          const AppHeader(title: 'Notifications', showMenuIcon: false),
           Expanded(
             child: BlocBuilder<NotificationBloc, NotificationState>(
               builder: (context, state) {
@@ -40,13 +40,21 @@ class NotificationsTab extends StatelessWidget {
                   );
                 }
 
-                return ListView.separated(
+                return ListView.builder(
                   padding: EdgeInsets.zero,
                   itemCount: state.notifications.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final notification = state.notifications[index];
-                    return _NotificationTile(notification: notification);
+                    return Column(
+                      children: [
+                        _NotificationTile(notification: notification),
+                        Divider(
+                          height: 1,
+                          thickness: 0.5,
+                          color: Colors.grey.shade300,
+                        ),
+                      ],
+                    );
                   },
                 );
               },
@@ -129,7 +137,8 @@ class _NotificationTile extends StatelessWidget {
           return false;
         }
       },
-      child: Padding(
+      child: Container(
+        color: const Color(0xFFF5F5F5),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
