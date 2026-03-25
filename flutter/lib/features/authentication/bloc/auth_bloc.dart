@@ -41,7 +41,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = await authRepository.login(event.email, event.password);
       emit(AuthAuthenticated(user));
     } on AuthException catch (e) {
-      emit(AuthUnauthenticated(e.message));
+      if (e.errorCode == 'email_not_verified') {
+        emit(AuthEmailVerificationRequired(email: event.email));
+      } else {
+        emit(AuthUnauthenticated(e.message));
+      }
     } on ApiException catch (e) {
       emit(AuthUnauthenticated(e.message));
     } catch (_) {
@@ -64,13 +68,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         return;
       }
 
-      final user = await authRepository.signup(
+      final result = await authRepository.signup(
         email: event.email,
         password: event.password,
         firstName: event.firstName,
         lastName: event.lastName,
       );
-      emit(AuthAuthenticated(user));
+      emit(AuthEmailVerificationRequired(
+        email: event.email,
+        token: result.token,
+      ));
     } on AuthException catch (e) {
       emit(AuthUnauthenticated(e.message));
     } on ApiException catch (e) {

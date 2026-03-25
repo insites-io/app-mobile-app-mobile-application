@@ -9,15 +9,20 @@ import 'bloc/cocktail_bloc.dart';
 import 'bloc/cocktail_event.dart';
 import 'bloc/cocktail_state.dart';
 import 'cocktails_list_screen.dart';
+import 'data/models/cocktail_model.dart';
 
 class AddCocktailScreen extends StatefulWidget {
-  const AddCocktailScreen({super.key});
+  const AddCocktailScreen({super.key, this.cocktail});
+
+  /// When provided, the screen operates in edit mode.
+  final Cocktail? cocktail;
 
   @override
   State<AddCocktailScreen> createState() => _AddCocktailScreenState();
 }
 
 class _AddCocktailScreenState extends State<AddCocktailScreen> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _keywordController = TextEditingController();
@@ -28,6 +33,26 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
 
   final List<String> _keywords = [];
   File? _selectedImage;
+
+  bool get _isEditing => widget.cocktail != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditing) {
+      final c = widget.cocktail!;
+      _nameController.text = c.name;
+      _instructionsController.text = c.instructions ?? '';
+      _ingredientsController.text = c.ingredients ?? '';
+      if (c.duration != null) _durationController.text = c.duration.toString();
+      if (c.amount != null) _amountController.text = c.amount.toString();
+      if (c.keywords != null && c.keywords!.isNotEmpty) {
+        _keywords.addAll(
+          c.keywords!.split(',').map((k) => k.trim()).where((k) => k.isNotEmpty),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -70,21 +95,44 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    context.read<CocktailBloc>().add(
-          CocktailAddRequested(
-            name: _nameController.text.trim(),
-            keywords: _keywords.isNotEmpty ? _keywords.join(', ') : null,
-            instructions: _instructionsController.text.trim().isNotEmpty
-                ? _instructionsController.text.trim()
-                : null,
-            ingredients: _ingredientsController.text.trim().isNotEmpty
-                ? _ingredientsController.text.trim()
-                : null,
-            duration: int.tryParse(_durationController.text.trim()),
-            amount: int.tryParse(_amountController.text.trim()),
-            imagePath: _selectedImage?.path,
-          ),
-        );
+    final name = _nameController.text.trim();
+    final keywords = _keywords.isNotEmpty ? _keywords.join(', ') : null;
+    final instructions = _instructionsController.text.trim().isNotEmpty
+        ? _instructionsController.text.trim()
+        : null;
+    final ingredients = _ingredientsController.text.trim().isNotEmpty
+        ? _ingredientsController.text.trim()
+        : null;
+    final duration = int.tryParse(_durationController.text.trim());
+    final amount = int.tryParse(_amountController.text.trim());
+    final imagePath = _selectedImage?.path;
+
+    if (_isEditing) {
+      context.read<CocktailBloc>().add(
+            CocktailUpdateRequested(
+              id: widget.cocktail!.id!,
+              name: name,
+              keywords: keywords,
+              instructions: instructions,
+              ingredients: ingredients,
+              duration: duration,
+              amount: amount,
+              imagePath: imagePath,
+            ),
+          );
+    } else {
+      context.read<CocktailBloc>().add(
+            CocktailAddRequested(
+              name: name,
+              keywords: keywords,
+              instructions: instructions,
+              ingredients: ingredients,
+              duration: duration,
+              amount: amount,
+              imagePath: imagePath,
+            ),
+          );
+    }
   }
 
   void _clearForm() {
@@ -114,6 +162,11 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
               builder: (_) => const CocktailsListScreen(),
             ),
           );
+        } else if (state is CocktailUpdateSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Recipe updated successfully!')),
+          );
+          Navigator.of(context).pop(state.cocktail);
         } else if (state is CocktailError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message)),
@@ -121,10 +174,17 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
         }
       },
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: Colors.white,
+        endDrawer: const AppCategoryDrawer(),
         body: Column(
           children: [
-            const AppHeader(title: 'Add Recipe'),
+            AppHeader(
+              title: _isEditing ? 'Edit Recipe' : 'Add Recipe',
+              showBackButton: _isEditing,
+              showMenuIcon: !_isEditing,
+              onMenuTap: () => _scaffoldKey.currentState?.openEndDrawer(),
+            ),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
@@ -180,18 +240,20 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
                       ),
                       const SizedBox(height: 20),
 
+                      // ── Image ──
+                      AppImagePicker(
+                        selectedImage: _selectedImage,
+                        existingImageUrl:
+                            _isEditing ? widget.cocktail!.image : null,
+                        onTap: _pickImage,
+                      ),
+                      const SizedBox(height: 20),
+
                       // ── Ingredients ──
                       AppRichTextField(
                         label: 'Ingredients',
                         hintText: 'One ingredient per line',
                         controller: _ingredientsController,
-                      ),
-                      const SizedBox(height: 20),
-
-                      // ── Image ──
-                      AppImagePicker(
-                        selectedImage: _selectedImage,
-                        onTap: _pickImage,
                       ),
                       const SizedBox(height: 20),
 
@@ -211,13 +273,17 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
                               Expanded(
                                 child: AppSecondaryButton(
                                   label: 'CANCEL',
-                                  onPressed: isLoading ? null : _clearForm,
+                                  onPressed: isLoading
+                                      ? null
+                                      : _isEditing
+                                          ? () => Navigator.of(context).pop()
+                                          : _clearForm,
                                 ),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
                                 child: AppPrimaryButton(
-                                  label: 'SAVE',
+                                  label: _isEditing ? 'UPDATE' : 'SAVE',
                                   isLoading: isLoading,
                                   onPressed: isLoading ? null : _submit,
                                 ),

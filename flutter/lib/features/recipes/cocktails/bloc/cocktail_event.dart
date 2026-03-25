@@ -43,3 +43,38 @@ class CocktailAddRequested extends CocktailEvent {
         imagePath,
       ];
 }
+
+/// Update an existing cocktail in the database.
+class CocktailUpdateRequested extends CocktailEvent {
+  const CocktailUpdateRequested({
+    required this.id,
+    required this.name,
+    this.keywords,
+    this.instructions,
+    this.ingredients,
+    this.duration,
+    this.amount,
+    this.imagePath,
+  });
+
+  final int id;
+  final String name;
+  final String? keywords;
+  final String? instructions;
+  final String? ingredients;
+  final int? duration;
+  final int? amount;
+  final String? imagePath;
+
+  @override
+  List<Object?> get props => [
+        id,
+        name,
+        keywords,
+        instructions,
+        ingredients,
+        duration,
+        amount,
+        imagePath,
+      ];
+}

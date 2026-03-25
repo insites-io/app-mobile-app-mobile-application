@@ -3,10 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../config/app_colors.dart';
 import '../../../core/widgets/widgets.dart';
-import '../../home/home_screen.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../verify_email/verify_email_screen.dart';
+import '../../welcome/welcome_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -67,10 +68,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is AuthAuthenticated) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
-            (_) => false,
+        if (state is AuthEmailVerificationRequired) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute<void>(
+              builder: (_) => VerifyEmailScreen(
+                email: state.email,
+                token: state.token,
+              ),
+            ),
           );
         }
       },
@@ -82,7 +87,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
           leading: IconButton(
             icon:
                 const Icon(Icons.chevron_left, color: AppColors.textPrimary),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute<void>(
+                  builder: (_) => const WelcomeScreen(),
+                ),
+                (_) => false,
+              );
+            },
           ),
         ),
         body: SafeArea(
@@ -238,11 +250,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         onPressed: isLoading ? null : _onSignUp,
                       );
                     },
-                  ),
-                  const SizedBox(height: 12),
-                  AppSecondaryButton(
-                    label: 'CANCEL',
-                    onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(height: 32),
                 ],

@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../config/app_colors.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../authentication/bloc/auth_bloc.dart';
+import '../../authentication/bloc/auth_state.dart';
+import '../../favorites/bloc/favorites_bloc.dart';
+import '../../favorites/bloc/favorites_event.dart';
+import '../../favorites/bloc/favorites_state.dart';
+import 'add_cocktail_screen.dart';
 import 'data/models/cocktail_model.dart';
 
 class CocktailDetailScreen extends StatefulWidget {
@@ -21,6 +28,7 @@ class _CocktailDetailScreenState extends State<CocktailDetailScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() => setState(() {}));
   }
 
   @override
@@ -39,35 +47,32 @@ class _CocktailDetailScreenState extends State<CocktailDetailScreen>
       body: Column(
         children: [
           Expanded(
-            child: CustomScrollView(
-              slivers: [
-                // ── Hero Image ──
-                SliverToBoxAdapter(child: _HeroImage(cocktail: cocktail)),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Hero Image ──
+                  _HeroImage(
+                    cocktail: cocktail,
+                    onEdit: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) =>
+                              AddCocktailScreen(cocktail: cocktail),
+                        ),
+                      );
+                    },
+                  ),
 
-                // ── Content ──
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  // ── Content ──
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Category tag
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: AppColors.textSecondary),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'Cocktail',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
+                        const AppBadge(label: 'Cocktail'),
                         const SizedBox(height: 8),
 
                         // Rating
@@ -79,95 +84,162 @@ class _CocktailDetailScreenState extends State<CocktailDetailScreen>
                               const SizedBox(width: 4),
                               Text(
                                 cocktail.rating!.toStringAsFixed(1),
-                                style: theme.textTheme.bodyMedium?.copyWith(
+                                style:
+                                    theme.textTheme.bodyMedium?.copyWith(
                                   color: AppColors.textSecondary,
                                 ),
                               ),
                             ],
                           ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
 
                         // Name & Favorites
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Expanded(
                               child: Text(
                                 cocktail.name,
-                                style:
-                                    theme.textTheme.headlineMedium?.copyWith(
+                                style: theme.textTheme.headlineMedium
+                                    ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textPrimary,
                                 ),
                               ),
                             ),
-                            TextButton.icon(
-                              onPressed: () {},
-                              icon: Icon(
-                                Icons.favorite_border,
-                                color: AppColors.primary,
-                                size: 20,
-                              ),
-                              label: Text(
-                                'ADD TO FAVORITES',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
-                              ),
+                            BlocBuilder<FavoritesBloc, FavoritesState>(
+                              builder: (context, favState) {
+                                final isFav =
+                                    favState.isFavorite(cocktail.id);
+                                return GestureDetector(
+                                  onTap: () {
+                                    final authState =
+                                        context.read<AuthBloc>().state;
+                                    if (authState is AuthAuthenticated) {
+                                      context.read<FavoritesBloc>().add(
+                                            FavoritesToggleRequested(
+                                              userId: authState.user.id,
+                                              cocktail: cocktail,
+                                            ),
+                                          );
+                                    }
+                                  },
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        isFav
+                                            ? 'REMOVE FAVORITE'
+                                            : 'ADD TO FAVORITES',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        isFav
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: isFav
+                                            ? Colors.red
+                                            : AppColors.primary,
+                                        size: 18,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 12),
 
                         // Duration & Amount
                         Row(
                           children: [
                             if (cocktail.duration != null)
-                              Text(
-                                'Duration: ${cocktail.duration} minutes',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
+                              Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: 'Duration: ',
+                                      style:
+                                          theme.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: '${cocktail.duration} minutes',
+                                      style:
+                                          theme.textTheme.bodyMedium?.copyWith(
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             if (cocktail.duration != null &&
                                 cocktail.amount != null)
                               const SizedBox(width: 16),
                             if (cocktail.amount != null)
-                              Text(
-                                'Amount: ${cocktail.amount} servings',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
+                              Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: 'Amount: ',
+                                      style:
+                                          theme.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: '${cocktail.amount} servings',
+                                      style:
+                                          theme.textTheme.bodyMedium?.copyWith(
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
-                ),
 
-                // ── Tab Bar ──
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _TabBarDelegate(tabController: _tabController),
-                ),
-
-                // ── Tab Content ──
-                SliverFillRemaining(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _IngredientsTab(ingredients: cocktail.ingredients),
-                      _InstructionsTab(instructions: cocktail.instructions),
-                    ],
+                  // ── Tab Bar ──
+                  Container(
+                    color: Colors.white,
+                    child: TabBar(
+                      controller: _tabController,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: AppColors.textPrimary,
+                      labelStyle:
+                          const TextStyle(fontWeight: FontWeight.w600),
+                      indicator: const BoxDecoration(
+                        color: AppColors.secondary,
+                        borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(8)),
+                      ),
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      dividerColor: Colors.transparent,
+                      tabs: const [
+                        Tab(text: 'Ingredients'),
+                        Tab(text: 'Instructions'),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+
+                  // ── Tab Content (inline, no nested scroll) ──
+                  _buildTabContent(context, cocktail),
+                ],
+              ),
             ),
           ),
 
@@ -185,6 +257,47 @@ class _CocktailDetailScreenState extends State<CocktailDetailScreen>
       ),
     );
   }
+
+  Widget _buildTabContent(BuildContext context, Cocktail cocktail) {
+    final content = _tabController.index == 0
+        ? cocktail.ingredients
+        : cocktail.instructions;
+    final emptyMessage = _tabController.index == 0
+        ? 'No ingredients listed.'
+        : 'No instructions provided.';
+
+    if (content == null || content.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(24),
+        child: Center(child: Text(emptyMessage)),
+      );
+    }
+
+    final lines = content
+        .split('\n')
+        .where((line) => line.trim().isNotEmpty)
+        .toList();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (int i = 0; i < lines.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                '${i + 1}. ${lines[i].trim()}',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                    ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -192,9 +305,10 @@ class _CocktailDetailScreenState extends State<CocktailDetailScreen>
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _HeroImage extends StatelessWidget {
-  const _HeroImage({required this.cocktail});
+  const _HeroImage({required this.cocktail, required this.onEdit});
 
   final Cocktail cocktail;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +317,7 @@ class _HeroImage extends StatelessWidget {
     return Stack(
       children: [
         SizedBox(
-          height: 300,
+          height: 320,
           width: double.infinity,
           child: cocktail.image != null && cocktail.image!.isNotEmpty
               ? Image.network(
@@ -213,21 +327,38 @@ class _HeroImage extends StatelessWidget {
                 )
               : _placeholder(),
         ),
+        // Top bar with back and edit buttons
         Positioned(
           top: topPadding + 8,
           left: 16,
-          child: GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.3),
-                shape: BoxShape.circle,
+          right: 16,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: const Icon(Icons.arrow_back,
+                    color: Colors.white, size: 26),
               ),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 22,
+              GestureDetector(
+                onTap: onEdit,
+                child: const Icon(Icons.edit_outlined,
+                    color: Colors.white, size: 26),
+              ),
+            ],
+          ),
+        ),
+        // Rounded white overlap at the bottom of the image
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 24,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(32),
               ),
             ),
           ),
@@ -240,106 +371,6 @@ class _HeroImage extends StatelessWidget {
     return Container(
       color: Colors.grey.shade300,
       child: Icon(Icons.local_bar, size: 64, color: Colors.grey.shade500),
-    );
-  }
-}
-
-class _TabBarDelegate extends SliverPersistentHeaderDelegate {
-  const _TabBarDelegate({required this.tabController});
-
-  final TabController tabController;
-
-  @override
-  double get minExtent => 48;
-
-  @override
-  double get maxExtent => 48;
-
-  @override
-  bool shouldRebuild(covariant _TabBarDelegate oldDelegate) => false;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      color: Colors.white,
-      child: TabBar(
-        controller: tabController,
-        labelColor: Colors.white,
-        unselectedLabelColor: AppColors.textPrimary,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-        indicator: BoxDecoration(
-          color: AppColors.secondary,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerColor: Colors.transparent,
-        tabs: const [
-          Tab(text: 'Ingredients'),
-          Tab(text: 'Instructions'),
-        ],
-      ),
-    );
-  }
-}
-
-class _IngredientsTab extends StatelessWidget {
-  const _IngredientsTab({required this.ingredients});
-
-  final String? ingredients;
-
-  @override
-  Widget build(BuildContext context) {
-    if (ingredients == null || ingredients!.isEmpty) {
-      return const Center(child: Text('No ingredients listed.'));
-    }
-
-    final lines = ingredients!
-        .split('\n')
-        .where((line) => line.trim().isNotEmpty)
-        .toList();
-
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      itemCount: lines.length,
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(
-            '${index + 1}. ${lines[index].trim()}',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textPrimary,
-                ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _InstructionsTab extends StatelessWidget {
-  const _InstructionsTab({required this.instructions});
-
-  final String? instructions;
-
-  @override
-  Widget build(BuildContext context) {
-    if (instructions == null || instructions!.isEmpty) {
-      return const Center(child: Text('No instructions provided.'));
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      child: Text(
-        instructions!,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.textPrimary,
-              height: 1.6,
-            ),
-      ),
     );
   }
 }

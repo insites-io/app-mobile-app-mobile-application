@@ -7,6 +7,8 @@ import '../../home/home_screen.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../../welcome/welcome_screen.dart';
+import '../verify_email/verify_email_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -51,6 +53,15 @@ class _SignInScreenState extends State<SignInScreen> {
             MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
             (_) => false,
           );
+        } else if (state is AuthEmailVerificationRequired) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute<void>(
+              builder: (_) => VerifyEmailScreen(
+                email: state.email,
+                token: state.token,
+              ),
+            ),
+          );
         }
       },
       child: Scaffold(
@@ -59,9 +70,16 @@ class _SignInScreenState extends State<SignInScreen> {
           backgroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
-            icon:
-                const Icon(Icons.chevron_left, color: AppColors.textPrimary),
-            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.chevron_left,
+                color: AppColors.textPrimary),
+            onPressed: () {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute<void>(
+                  builder: (_) => const WelcomeScreen(),
+                ),
+                (_) => false,
+              );
+            },
           ),
         ),
         body: SafeArea(
@@ -176,7 +194,14 @@ class _SignInScreenState extends State<SignInScreen> {
                   const SizedBox(height: 12),
                   AppSecondaryButton(
                     label: 'CANCEL',
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const WelcomeScreen(),
+                        ),
+                        (_) => false,
+                      );
+                    },
                   ),
                   const SizedBox(height: 32),
                 ],

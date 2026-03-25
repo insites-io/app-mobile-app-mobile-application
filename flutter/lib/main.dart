@@ -8,6 +8,10 @@ import 'core/storage/secure_storage_service.dart';
 import 'features/authentication/bloc/auth_bloc.dart';
 import 'features/authentication/bloc/auth_event.dart';
 import 'features/authentication/data/repositories/auth_repository.dart';
+import 'features/favorites/bloc/favorites_bloc.dart';
+import 'features/favorites/data/repositories/favorites_repository.dart';
+import 'features/notifications/bloc/notification_bloc.dart';
+import 'features/notifications/data/repositories/notification_repository.dart';
 import 'features/recipes/cocktails/bloc/cocktail_bloc.dart';
 import 'features/recipes/cocktails/data/repositories/cocktail_repository.dart';
 import 'features/splash/splash_screen.dart';
@@ -25,10 +29,14 @@ void main() async {
   final cocktailRepository = CocktailRepository(
     apiClient: apiClient,
   );
+  final favoritesRepository = FavoritesRepository();
+  final notificationRepository = NotificationRepository();
 
   runApp(InsitesApp(
     authRepository: authRepository,
     cocktailRepository: cocktailRepository,
+    favoritesRepository: favoritesRepository,
+    notificationRepository: notificationRepository,
   ));
 }
 
@@ -37,10 +45,14 @@ class InsitesApp extends StatelessWidget {
     super.key,
     required this.authRepository,
     required this.cocktailRepository,
+    required this.favoritesRepository,
+    required this.notificationRepository,
   });
 
   final AuthRepository authRepository;
   final CocktailRepository cocktailRepository;
+  final FavoritesRepository favoritesRepository;
+  final NotificationRepository notificationRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +64,14 @@ class InsitesApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) => CocktailBloc(cocktailRepository: cocktailRepository),
+        ),
+        BlocProvider(
+          create: (_) =>
+              FavoritesBloc(favoritesRepository: favoritesRepository),
+        ),
+        BlocProvider(
+          create: (_) => NotificationBloc(
+              notificationRepository: notificationRepository),
         ),
       ],
       child: MaterialApp(

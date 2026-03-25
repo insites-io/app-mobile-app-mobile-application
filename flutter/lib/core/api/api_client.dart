@@ -111,6 +111,38 @@ class ApiClient {
     }
   }
 
+  /// PUT with JSON body and Authorization header.
+  Future<Map<String, dynamic>> jsonPut(
+    String path, {
+    Map<String, dynamic>? data,
+    String? authToken,
+  }) async {
+    try {
+      final response = await _dio.put<String>(
+        path,
+        data: jsonEncode(data),
+        options: Options(
+          contentType: Headers.jsonContentType,
+          headers: {
+            if (authToken != null) 'Authorization': authToken,
+          },
+        ),
+      );
+
+      if (response.statusCode == 404) {
+        throw ApiException(
+          'Endpoint not found: ${response.realUri} (HTTP 404).',
+        );
+      }
+
+      return _parseJson(response.data!);
+    } on ApiException {
+      rethrow;
+    } on DioException catch (e) {
+      throw ApiException('Network error: ${e.message}');
+    }
+  }
+
   /// POST with multipart form data (for file uploads).
   Future<Map<String, dynamic>> multipartPost(
     String path, {

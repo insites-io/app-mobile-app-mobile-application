@@ -17,93 +17,66 @@ class CocktailsListScreen extends StatefulWidget {
 }
 
 class _CocktailsListScreenState extends State<CocktailsListScreen> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
     context.read<CocktailBloc>().add(const CocktailsLoadRequested());
   }
 
+  Future<void> _onRefresh() async {
+    final bloc = context.read<CocktailBloc>();
+    bloc.add(const CocktailsLoadRequested());
+    await bloc.stream.firstWhere(
+      (state) => state is CocktailsLoaded || state is CocktailError,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
+      endDrawer: const AppCategoryDrawer(),
       body: Column(
         children: [
-          const AppHeader(title: 'Cocktails', showBackButton: true),
+          AppHeader(
+            title: 'Cocktails',
+            showBackButton: true,
+            onMenuTap: () => _scaffoldKey.currentState?.openEndDrawer(),
+          ),
           Expanded(
             child: BlocBuilder<CocktailBloc, CocktailState>(
               builder: (context, state) {
-                if (state is CocktailLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (state is CocktailError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            state.message,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(height: 16),
-                          TextButton(
-                            onPressed: () => context
-                                .read<CocktailBloc>()
-                                .add(const CocktailsLoadRequested()),
-                            child: const Text('Retry'),
-                          ),
-                        ],
+                return AppRefreshableList<Cocktail>(
+                  items: state is CocktailsLoaded ? state.cocktails : null,
+                  isLoading: state is CocktailLoading,
+                  errorMessage:
+                      state is CocktailError ? state.message : null,
+                  emptyMessage:
+                      'No cocktails yet. Add your first recipe!',
+                  onRefresh: _onRefresh,
+                  header: Text(
+                    'Cocktails',
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineSmall
+                        ?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                  ),
+                  itemBuilder: (context, cocktail) => _CocktailListCard(
+                    cocktail: cocktail,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            CocktailDetailScreen(cocktail: cocktail),
                       ),
                     ),
-                  );
-                }
-
-                if (state is CocktailsLoaded) {
-                  if (state.cocktails.isEmpty) {
-                    return const Center(
-                      child: Text('No cocktails yet. Add your first recipe!'),
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-                    itemCount: state.cocktails.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Text(
-                            'Cocktails',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                          ),
-                        );
-                      }
-
-                      final cocktail = state.cocktails[index - 1];
-                      return _CocktailListCard(
-                        cocktail: cocktail,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) =>
-                                CocktailDetailScreen(cocktail: cocktail),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }
-
-                return const SizedBox.shrink();
+                  ),
+                );
               },
             ),
           ),

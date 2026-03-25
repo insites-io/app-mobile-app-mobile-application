@@ -24,7 +24,10 @@ class AuthRepository {
     );
 
     if (response['success'] != true) {
-      throw AuthException(response['error'] as String? ?? 'Login failed.');
+      throw AuthException(
+        response['error'] as String? ?? 'Login failed.',
+        errorCode: response['error_code'] as String?,
+      );
     }
 
     final user = User.fromJson(response['user'] as Map<String, dynamic>);
@@ -80,8 +83,9 @@ class AuthRepository {
     return response['available'] == true;
   }
 
-  /// Register a new user. Stores JWT + email on success.
-  Future<User> signup({
+  /// Register a new user. Returns user and token but does NOT store them
+  /// as an authenticated session — email verification is required first.
+  Future<({User user, String token})> signup({
     required String email,
     required String password,
     required String firstName,
@@ -106,10 +110,21 @@ class AuthRepository {
     final user = User.fromJson(response['user'] as Map<String, dynamic>);
     final token = response['token'] as String;
 
-    await secureStorage.saveToken(token);
-    await secureStorage.saveEmail(email);
+    return (user: user, token: token);
+  }
 
-    return user;
+  /// Send a verification email using the JWT token from signup.
+  Future<void> sendVerificationEmail(String token) async {
+    final response = await apiClient.post(
+      '/api/mobile/send-verification-email',
+      data: {'token': token},
+    );
+
+    if (response['success'] != true) {
+      throw AuthException(
+        response['error'] as String? ?? 'Failed to send verification email.',
+      );
+    }
   }
 
   /// Check whether the stored JWT is still valid.
@@ -146,9 +161,12 @@ class AuthRepository {
 
 /// Thrown when the API returns `"success": false`.
 class AuthException implements Exception {
-  const AuthException(this.message);
+  const AuthException(this.message, {this.errorCode});
 
   final String message;
+
+  /// Optional error code from the API (e.g. `"email_not_verified"`).
+  final String? errorCode;
 
   @override
   String toString() => message;

@@ -56,6 +56,26 @@ class CocktailRepository {
     return Cocktail.fromJson(response);
   }
 
+  /// Update an existing cocktail. Optionally uploads a new image via S3.
+  Future<Cocktail> updateCocktail(
+    Cocktail cocktail, {
+    String? imagePath,
+  }) async {
+    final data = cocktail.toCreateJson();
+
+    if (imagePath != null) {
+      final imageUrl = await _uploadImage(imagePath);
+      data['properties.image'] = imageUrl;
+    }
+
+    final response = await apiClient.jsonPut(
+      '$_itemsPath/${cocktail.id}',
+      data: data,
+      authToken: ApiConfig.iiaApiKey,
+    );
+    return Cocktail.fromJson(response);
+  }
+
   /// 3-step IIA presigned S3 upload.
   ///
   /// 1. Fetch presigned credentials from IIA.

@@ -39,3 +39,21 @@ final class AuthUnauthenticated extends AuthState {
   @override
   List<Object?> get props => [error];
 }
+
+/// Email verification is required before the user can log in.
+///
+/// Carries the [email] for display and an optional [token] from signup
+/// (needed to call send-verification-email). When arriving from a failed
+/// login, [token] will be null.
+final class AuthEmailVerificationRequired extends AuthState {
+  const AuthEmailVerificationRequired({
+    required this.email,
+    this.token,
+  });
+
+  final String email;
+  final String? token;
+
+  @override
+  List<Object?> get props => [email, token];
+}

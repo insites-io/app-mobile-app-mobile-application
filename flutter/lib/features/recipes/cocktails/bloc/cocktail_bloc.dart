@@ -11,6 +11,7 @@ class CocktailBloc extends Bloc<CocktailEvent, CocktailState> {
       : super(const CocktailInitial()) {
     on<CocktailsLoadRequested>(_onLoadRequested);
     on<CocktailAddRequested>(_onAddRequested);
+    on<CocktailUpdateRequested>(_onUpdateRequested);
   }
 
   final CocktailRepository cocktailRepository;
@@ -53,6 +54,33 @@ class CocktailBloc extends Bloc<CocktailEvent, CocktailState> {
       emit(CocktailError(e.message));
     } catch (e) {
       emit(CocktailError('Failed to add cocktail: $e'));
+    }
+  }
+
+  Future<void> _onUpdateRequested(
+    CocktailUpdateRequested event,
+    Emitter<CocktailState> emit,
+  ) async {
+    emit(const CocktailAddInProgress());
+    try {
+      final cocktail = Cocktail(
+        id: event.id,
+        name: event.name,
+        keywords: event.keywords,
+        instructions: event.instructions,
+        ingredients: event.ingredients,
+        duration: event.duration,
+        amount: event.amount,
+      );
+      final updated = await cocktailRepository.updateCocktail(
+        cocktail,
+        imagePath: event.imagePath,
+      );
+      emit(CocktailUpdateSuccess(updated));
+    } on ApiException catch (e) {
+      emit(CocktailError(e.message));
+    } catch (e) {
+      emit(CocktailError('Failed to update cocktail: $e'));
     }
   }
 }

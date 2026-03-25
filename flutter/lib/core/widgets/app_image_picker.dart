@@ -11,6 +11,7 @@ class AppImagePicker extends StatelessWidget {
     super.key,
     required this.onTap,
     this.selectedImage,
+    this.existingImageUrl,
     this.label = 'Image',
     this.hint = 'Drag and drop\nthe file or add\nan image',
     this.formats = 'JPG, PNG, WEBP or GIF',
@@ -20,6 +21,7 @@ class AppImagePicker extends StatelessWidget {
 
   final VoidCallback onTap;
   final File? selectedImage;
+  final String? existingImageUrl;
   final String label;
   final String hint;
   final String formats;
@@ -59,6 +61,24 @@ class AppImagePicker extends StatelessWidget {
                       fit: BoxFit.cover,
                     ),
                   )
+                : existingImageUrl != null && existingImageUrl!.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.network(
+                          existingImageUrl!,
+                          height: 160,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => SizedBox(
+                            height: 160,
+                            child: Icon(
+                              Icons.cloud_upload_outlined,
+                              size: 40,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      )
                 : Column(
                     children: [
                       Icon(

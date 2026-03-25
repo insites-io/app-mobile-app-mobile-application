@@ -68,6 +68,21 @@ class Cocktail {
     return map;
   }
 
+  /// Serialises the cocktail for local storage.
+  Map<String, dynamic> toStorageJson() => {
+        'id': id,
+        'properties': {
+          'name': name,
+          if (keywords != null) 'keywords': keywords,
+          if (image != null) 'image': image,
+          if (instructions != null) 'instructions': instructions,
+          if (ingredients != null) 'ingredients': ingredients,
+          if (duration != null) 'duration': duration,
+          if (amount != null) 'amount': amount,
+          if (rating != null) 'rating': rating,
+        },
+      };
+
   static int? _parseInt(dynamic value) {
     if (value is int) return value;
     if (value is String) return int.tryParse(value);

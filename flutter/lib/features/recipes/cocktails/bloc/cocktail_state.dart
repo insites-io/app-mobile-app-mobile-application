@@ -34,6 +34,15 @@ class CocktailAddSuccess extends CocktailState {
   const CocktailAddSuccess();
 }
 
+class CocktailUpdateSuccess extends CocktailState {
+  const CocktailUpdateSuccess(this.cocktail);
+
+  final Cocktail cocktail;
+
+  @override
+  List<Object?> get props => [cocktail.id];
+}
+
 class CocktailError extends CocktailState {
   const CocktailError(this.message);
 
