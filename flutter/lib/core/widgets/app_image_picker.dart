@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../config/app_colors.dart';
-import 'app_secondary_button.dart';
 
 /// Reusable image picker field with upload area and preview.
 class AppImagePicker extends StatelessWidget {
@@ -107,10 +106,24 @@ class AppImagePicker extends StatelessWidget {
             color: AppColors.textSecondary,
           ),
         ),
-        const SizedBox(height: 8),
-        AppSecondaryButton(
-          label: 'UPLOAD IMAGE',
-          onPressed: onTap,
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton(
+            onPressed: onTap,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              side: const BorderSide(color: AppColors.primary, width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+            child: const Text(
+              'UPLOAD IMAGE',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+            ),
+          ),
         ),
       ],
     );

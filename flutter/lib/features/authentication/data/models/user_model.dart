@@ -45,6 +45,7 @@ class User {
     this.externalId,
     this.permissionLevel,
     this.primaryAccountHolder = false,
+    this.profilePictureUrl,
     this.contact,
   });
 
@@ -57,6 +58,7 @@ class User {
       externalId: json['external_id'] as String?,
       permissionLevel: json['permission_level'] as String?,
       primaryAccountHolder: json['primary_account_holder'] as bool? ?? false,
+      profilePictureUrl: json['profile_picture_url'] as String?,
       contact: json['contact'] != null
           ? Contact.fromJson(json['contact'] as Map<String, dynamic>)
           : null,
@@ -70,6 +72,7 @@ class User {
   final String? externalId;
   final String? permissionLevel;
   final bool primaryAccountHolder;
+  final String? profilePictureUrl;
   final Contact? contact;
 
   String get fullName => '$firstName $lastName';
@@ -82,6 +85,7 @@ class User {
         'external_id': externalId,
         'permission_level': permissionLevel,
         'primary_account_holder': primaryAccountHolder,
+        'profile_picture_url': profilePictureUrl,
         'contact': contact?.toJson(),
       };
 }

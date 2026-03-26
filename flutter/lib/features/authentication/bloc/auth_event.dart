@@ -45,3 +45,31 @@ final class AuthSignupRequested extends AuthEvent {
 final class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
 }
+
+/// Fired when the user updates their profile.
+final class AuthProfileUpdateRequested extends AuthEvent {
+  const AuthProfileUpdateRequested({
+    this.firstName,
+    this.lastName,
+    this.email,
+    this.profilePictureUrl,
+  });
+
+  final String? firstName;
+  final String? lastName;
+  final String? email;
+  final String? profilePictureUrl;
+
+  @override
+  List<Object?> get props => [firstName, lastName, email, profilePictureUrl];
+}
+
+/// Fired when the user changes their password.
+final class AuthPasswordChangeRequested extends AuthEvent {
+  const AuthPasswordChangeRequested({required this.newPassword});
+
+  final String newPassword;
+
+  @override
+  List<Object?> get props => [newPassword];
+}

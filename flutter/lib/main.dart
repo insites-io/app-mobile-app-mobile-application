@@ -33,6 +33,7 @@ void main() async {
   final notificationRepository = NotificationRepository();
 
   runApp(InsitesApp(
+    apiClient: apiClient,
     authRepository: authRepository,
     cocktailRepository: cocktailRepository,
     favoritesRepository: favoritesRepository,
@@ -43,12 +44,14 @@ void main() async {
 class InsitesApp extends StatelessWidget {
   const InsitesApp({
     super.key,
+    required this.apiClient,
     required this.authRepository,
     required this.cocktailRepository,
     required this.favoritesRepository,
     required this.notificationRepository,
   });
 
+  final ApiClient apiClient;
   final AuthRepository authRepository;
   final CocktailRepository cocktailRepository;
   final FavoritesRepository favoritesRepository;
@@ -56,7 +59,9 @@ class InsitesApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    return RepositoryProvider<ApiClient>.value(
+      value: apiClient,
+      child: MultiBlocProvider(
       providers: [
         BlocProvider(
           create: (_) => AuthBloc(authRepository: authRepository)
@@ -79,6 +84,7 @@ class InsitesApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         home: const SplashScreen(),
+      ),
       ),
     );
   }

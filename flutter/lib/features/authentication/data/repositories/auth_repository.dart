@@ -36,7 +36,13 @@ class AuthRepository {
     await secureStorage.saveToken(token);
     await secureStorage.saveEmail(email);
 
-    return user;
+    // Fetch full profile from /me to get all fields (e.g. profile_picture_url)
+    // that the login response may not include.
+    try {
+      return await getCurrentUser();
+    } catch (_) {
+      return user;
+    }
   }
 
   /// End the server session and clear all local credentials.
@@ -140,6 +146,67 @@ class AuthRepository {
     );
 
     return response['success'] == true;
+  }
+
+  /// Update the current user's profile. Only sends fields that have values.
+  Future<User> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? profilePictureUrl,
+  }) async {
+    final token = await secureStorage.getToken();
+    if (token == null) {
+      throw AuthException('Not authenticated.');
+    }
+
+    final data = <String, dynamic>{'token': token};
+    if (firstName != null) data['first_name'] = firstName;
+    if (lastName != null) data['last_name'] = lastName;
+    if (email != null) data['email'] = email;
+    if (profilePictureUrl != null) {
+      data['profile_picture_url'] = profilePictureUrl;
+    }
+
+    final response = await apiClient.post(
+      '/api/mobile/update-profile',
+      data: data,
+    );
+
+    if (response['success'] != true) {
+      throw AuthException(
+        response['error'] as String? ?? 'Failed to update profile.',
+      );
+    }
+
+    // If the email was changed, update the stored email.
+    if (email != null) {
+      await secureStorage.saveEmail(email);
+    }
+
+    return User.fromJson(response['user'] as Map<String, dynamic>);
+  }
+
+  /// Change the user's password. On success the server destroys the session.
+  Future<String> changePassword(String newPassword) async {
+    final token = await secureStorage.getToken();
+    if (token == null) {
+      throw AuthException('Not authenticated.');
+    }
+
+    final response = await apiClient.post(
+      '/api/mobile/change-password',
+      data: {'token': token, 'new_password': newPassword},
+    );
+
+    if (response['success'] != true) {
+      throw AuthException(
+        response['error'] as String? ?? 'Failed to change password.',
+      );
+    }
+
+    return response['message'] as String? ??
+        'Password changed successfully. Please log in again.';
   }
 
   /// Called on app launch: validate stored JWT → fetch user → or clear state.

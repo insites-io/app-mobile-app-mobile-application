@@ -9,11 +9,13 @@ class AppPrimaryButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.isLoading = false,
+    this.fontSize,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
+  final double? fontSize;
 
   static const double _height = 48;
   static const double _borderRadius = 4;
@@ -43,7 +45,7 @@ class AppPrimaryButton extends StatelessWidget {
               )
             : Text(
                 label,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: fontSize),
               ),
       ),
     );

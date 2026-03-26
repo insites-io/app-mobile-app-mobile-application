@@ -40,6 +40,37 @@ final class AuthUnauthenticated extends AuthState {
   List<Object?> get props => [error];
 }
 
+/// Profile was updated successfully.
+final class AuthProfileUpdated extends AuthState {
+  const AuthProfileUpdated(this.user);
+
+  final User user;
+
+  @override
+  List<Object?> get props => [user.id, user.email, user.firstName];
+}
+
+/// Password was changed — user must re-authenticate.
+final class AuthPasswordChanged extends AuthState {
+  const AuthPasswordChanged(this.message);
+
+  final String message;
+
+  @override
+  List<Object?> get props => [message];
+}
+
+/// A profile operation failed. Keeps the user authenticated.
+final class AuthProfileError extends AuthState {
+  const AuthProfileError(this.user, this.error);
+
+  final User user;
+  final String error;
+
+  @override
+  List<Object?> get props => [user.id, error];
+}
+
 /// Email verification is required before the user can log in.
 ///
 /// Carries the [email] for display and an optional [token] from signup

@@ -11,6 +11,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthSignupRequested>(_onSignupRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
+    on<AuthProfileUpdateRequested>(_onProfileUpdateRequested);
+    on<AuthPasswordChangeRequested>(_onPasswordChangeRequested);
   }
 
   final AuthRepository authRepository;
@@ -84,6 +86,57 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthUnauthenticated(e.message));
     } catch (_) {
       emit(const AuthUnauthenticated('An unexpected error occurred.'));
+    }
+  }
+
+  Future<void> _onProfileUpdateRequested(
+    AuthProfileUpdateRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final currentUser = state is AuthAuthenticated
+        ? (state as AuthAuthenticated).user
+        : null;
+    if (currentUser == null) return;
+
+    emit(const AuthLoading());
+    try {
+      final updatedUser = await authRepository.updateProfile(
+        firstName: event.firstName,
+        lastName: event.lastName,
+        email: event.email,
+        profilePictureUrl: event.profilePictureUrl,
+      );
+      emit(AuthProfileUpdated(updatedUser));
+      emit(AuthAuthenticated(updatedUser));
+    } on AuthException catch (e) {
+      emit(AuthProfileError(currentUser, e.message));
+    } on ApiException catch (e) {
+      emit(AuthProfileError(currentUser, e.message));
+    } catch (_) {
+      emit(AuthProfileError(currentUser, 'An unexpected error occurred.'));
+    }
+  }
+
+  Future<void> _onPasswordChangeRequested(
+    AuthPasswordChangeRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final currentUser = state is AuthAuthenticated
+        ? (state as AuthAuthenticated).user
+        : null;
+    if (currentUser == null) return;
+
+    emit(const AuthLoading());
+    try {
+      final message = await authRepository.changePassword(event.newPassword);
+      await authRepository.secureStorage.clearAll();
+      emit(AuthPasswordChanged(message));
+    } on AuthException catch (e) {
+      emit(AuthProfileError(currentUser, e.message));
+    } on ApiException catch (e) {
+      emit(AuthProfileError(currentUser, e.message));
+    } catch (_) {
+      emit(AuthProfileError(currentUser, 'An unexpected error occurred.'));
     }
   }
 

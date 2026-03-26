@@ -16,7 +16,7 @@ import '../recipes/cocktails/bloc/cocktail_bloc.dart';
 import '../recipes/cocktails/bloc/cocktail_state.dart';
 import '../welcome/welcome_screen.dart';
 import 'home_tab.dart';
-import 'profile_tab.dart';
+import '../profile/profile_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

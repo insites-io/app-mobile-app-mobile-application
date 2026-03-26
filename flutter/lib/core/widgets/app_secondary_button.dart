@@ -8,10 +8,12 @@ class AppSecondaryButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
+    this.fontSize,
   });
 
   final String label;
   final VoidCallback? onPressed;
+  final double? fontSize;
 
   static const double _height = 48;
   static const double _borderRadius = 4;
@@ -35,7 +37,7 @@ class AppSecondaryButton extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: const TextStyle(fontWeight: FontWeight.w600),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: fontSize),
         ),
       ),
     );
