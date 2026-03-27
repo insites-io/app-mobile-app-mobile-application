@@ -53,6 +53,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  mocktail: ^1.0.4
+  bloc_test: ^10.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -71,11 +73,7 @@ flutter:
     - assets/images/Insites-Logo.svg
     - assets/images/Welcome-Screen.webp
     - assets/images/Home-Banner.webp
-    - assets/images/Old-Fashioned.webp
-    - assets/images/Negroni.webp
-    - assets/images/Margarita.webp
-    - assets/images/Daiquiri.webp
-    - assets/images/Dry-Martini.webp
+    - assets/images/Verified-Email-Icon.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
