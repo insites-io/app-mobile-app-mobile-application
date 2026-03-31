@@ -29,7 +29,9 @@ class _CocktailDetailScreenState extends State<CocktailDetailScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() => setState(() {}));
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) setState(() {});
+    });
     _cocktail = widget.cocktail;
   }
 
@@ -86,7 +88,7 @@ class _CocktailDetailScreenState extends State<CocktailDetailScreen>
                           Row(
                             children: [
                               Icon(Icons.star,
-                                  size: 18, color: Colors.amber.shade700),
+                                  size: 18, color: AppColors.ratingGold),
                               const SizedBox(width: 4),
                               Text(
                                 cocktail.rating!.toStringAsFixed(1),
@@ -329,6 +331,19 @@ class _HeroImage extends StatelessWidget {
               ? Image.network(
                   cocktail.image!,
                   fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      color: Colors.grey.shade200,
+                      child: const Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    );
+                  },
                   errorBuilder: (_, _, _) => _placeholder(),
                 )
               : _placeholder(),
@@ -341,14 +356,16 @@ class _HeroImage extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: const Icon(Icons.arrow_back,
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                tooltip: 'Go back',
+                icon: const Icon(Icons.arrow_back,
                     color: Colors.white, size: 26),
               ),
-              GestureDetector(
-                onTap: onEdit,
-                child: const Icon(Icons.edit_outlined,
+              IconButton(
+                onPressed: onEdit,
+                tooltip: 'Edit cocktail',
+                icon: const Icon(Icons.edit_outlined,
                     color: Colors.white, size: 26),
               ),
             ],
@@ -375,8 +392,8 @@ class _HeroImage extends StatelessWidget {
 
   Widget _placeholder() {
     return Container(
-      color: Colors.grey.shade300,
-      child: Icon(Icons.local_bar, size: 64, color: Colors.grey.shade500),
+      color: AppColors.placeholderBg,
+      child: Icon(Icons.local_bar, size: 64, color: AppColors.placeholderIcon),
     );
   }
 }

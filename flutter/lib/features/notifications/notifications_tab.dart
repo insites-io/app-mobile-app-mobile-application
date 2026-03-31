@@ -46,12 +46,13 @@ class NotificationsTab extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final notification = state.notifications[index];
                     return Column(
+                      key: ValueKey(notification.id),
                       children: [
                         _NotificationTile(notification: notification),
                         Divider(
                           height: 1,
                           thickness: 0.5,
-                          color: Colors.grey.shade300,
+                          color: AppColors.divider,
                         ),
                       ],
                     );
@@ -92,8 +93,8 @@ class _NotificationTile extends StatelessWidget {
       key: ValueKey(notification.id),
       background: Container(
         color: notification.isRead
-            ? Colors.orange.shade700
-            : Colors.green.shade600,
+            ? AppColors.warning
+            : AppColors.success,
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.only(left: 24),
         child: Text(
@@ -106,7 +107,7 @@ class _NotificationTile extends StatelessWidget {
         ),
       ),
       secondaryBackground: Container(
-        color: Colors.red.shade600,
+        color: AppColors.error,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
         child: const Text(
@@ -138,7 +139,7 @@ class _NotificationTile extends StatelessWidget {
         }
       },
       child: Container(
-        color: const Color(0xFFF5F5F5),
+        color: AppColors.backgroundLight,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

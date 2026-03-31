@@ -137,7 +137,7 @@ class _ProfileTabState extends State<ProfileTab> {
             },
             child: Text(
               'Sign Out',
-              style: TextStyle(color: Colors.red.shade600),
+              style: TextStyle(color: AppColors.error),
             ),
           ),
         ],
@@ -179,8 +179,8 @@ class _MenuTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
-          top: isFirst ? const BorderSide(color: Color(0xFFE1E1E1)) : BorderSide.none,
-          bottom: const BorderSide(color: Color(0xFFE1E1E1)),
+          top: isFirst ? const BorderSide(color: AppColors.divider) : BorderSide.none,
+          bottom: const BorderSide(color: AppColors.divider),
         ),
       ),
       child: InkWell(
@@ -222,8 +222,8 @@ class _LogOutButton extends StatelessWidget {
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
-          top: BorderSide(color: Color(0xFFE1E1E1)),
-          bottom: BorderSide(color: Color(0xFFE1E1E1)),
+          top: BorderSide(color: AppColors.divider),
+          bottom: BorderSide(color: AppColors.divider),
         ),
       ),
       child: InkWell(
@@ -236,7 +236,7 @@ class _LogOutButton extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: Colors.red.shade700,
+              color: AppColors.logoutRed,
             ),
           ),
         ),

@@ -55,34 +55,9 @@ class AppKeywordsField extends StatelessWidget {
           onFieldSubmitted: (_) => onAdd(),
           decoration: InputDecoration(
             hintText: placeholder,
-            hintStyle: TextStyle(
-              color: AppColors.textSecondary.withValues(alpha: 0.7),
-            ),
-            isDense: true,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 10,
-            ),
-            filled: true,
-            fillColor: Colors.white,
             suffixIcon: IconButton(
               onPressed: onAdd,
               icon: const Icon(Icons.add, color: AppColors.primary),
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: const BorderSide(color: AppColors.inputBorder),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: const BorderSide(color: AppColors.inputBorder),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: const BorderSide(
-                color: AppColors.primary,
-                width: 2,
-              ),
             ),
           ),
         ),
@@ -97,7 +72,6 @@ class AppKeywordsField extends StatelessWidget {
                     label: Text(kw),
                     deleteIcon: const Icon(Icons.close, size: 16),
                     onDeleted: () => onRemove(kw),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 )
                 .toList(),

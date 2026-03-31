@@ -31,12 +31,15 @@ class AppHeader extends StatelessWidget {
         child: Row(
           children: [
             if (showBackButton)
-              GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: const Icon(Icons.arrow_back, color: Colors.white),
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                tooltip: 'Go back',
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               )
             else
-              const SizedBox(width: 24),
+              const SizedBox(width: 48),
             const Spacer(),
             Text(
               title,
@@ -47,12 +50,15 @@ class AppHeader extends StatelessWidget {
             ),
             const Spacer(),
             if (showMenuIcon)
-              GestureDetector(
-                onTap: onMenuTap,
-                child: const Icon(Icons.menu, color: Colors.white, size: 28),
+              IconButton(
+                onPressed: onMenuTap,
+                tooltip: 'Open menu',
+                icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               )
             else
-              const SizedBox(width: 28),
+              const SizedBox(width: 48),
           ],
         ),
       ),

@@ -70,20 +70,26 @@ class AppImagePicker extends StatelessWidget {
                           fit: BoxFit.cover,
                           errorBuilder: (_, _, _) => SizedBox(
                             height: 160,
-                            child: Icon(
-                              Icons.cloud_upload_outlined,
-                              size: 40,
-                              color: AppColors.textSecondary,
+                            child: Semantics(
+                              label: 'Upload image',
+                              child: Icon(
+                                Icons.cloud_upload_outlined,
+                                size: 40,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                           ),
                         ),
                       )
                 : Column(
                     children: [
-                      Icon(
-                        Icons.cloud_upload_outlined,
-                        size: 40,
-                        color: AppColors.textSecondary,
+                      Semantics(
+                        label: 'Upload image',
+                        child: Icon(
+                          Icons.cloud_upload_outlined,
+                          size: 40,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(

@@ -127,7 +127,7 @@ class _CocktailListCard extends StatelessWidget {
                   ),
                 ),
                 if (cocktail.rating != null) ...[
-                  Icon(Icons.star, size: 16, color: Colors.amber.shade700),
+                  Icon(Icons.star, size: 16, color: AppColors.ratingGold),
                   const SizedBox(width: 4),
                   Text(
                     cocktail.rating!.toStringAsFixed(1),
@@ -149,6 +149,19 @@ class _CocktailListCard extends StatelessWidget {
       return Image.network(
         cocktail.image!,
         fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: Colors.grey.shade200,
+            child: const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        },
         errorBuilder: (_, _, _) => _placeholder(),
       );
     }
@@ -157,8 +170,8 @@ class _CocktailListCard extends StatelessWidget {
 
   Widget _placeholder() {
     return Container(
-      color: Colors.grey.shade200,
-      child: Icon(Icons.local_bar, size: 48, color: Colors.grey.shade400),
+      color: AppColors.placeholderBg,
+      child: Icon(Icons.local_bar, size: 48, color: AppColors.placeholderIcon),
     );
   }
 }

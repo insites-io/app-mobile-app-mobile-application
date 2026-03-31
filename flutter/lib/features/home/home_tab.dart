@@ -102,6 +102,7 @@ class _HomeTabState extends State<HomeTab> {
                           itemBuilder: (context, index) {
                             final cocktail = mostPopular[index];
                             return CocktailCard(
+                              key: ValueKey(cocktail.id),
                               imageUrl: cocktail.image,
                               name: cocktail.name,
                               rating: cocktail.rating,
@@ -125,6 +126,7 @@ class _HomeTabState extends State<HomeTab> {
                           itemBuilder: (context, index) {
                             final cocktail = newlyAdded[index];
                             return CocktailCard(
+                              key: ValueKey(cocktail.id),
                               imageUrl: cocktail.image,
                               name: cocktail.name,
                               rating: cocktail.rating,

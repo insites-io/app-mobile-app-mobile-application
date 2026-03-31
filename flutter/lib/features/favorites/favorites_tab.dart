@@ -114,6 +114,7 @@ class _FavoritesTabState extends State<FavoritesTab> {
                   itemBuilder: (context, index) {
                     final cocktail = state.favorites[index];
                     return CocktailCard(
+                      key: ValueKey(cocktail.id),
                       imageUrl: cocktail.image,
                       name: cocktail.name,
                       rating: cocktail.rating,

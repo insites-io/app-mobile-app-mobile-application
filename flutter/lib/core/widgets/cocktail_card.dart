@@ -54,7 +54,7 @@ class CocktailCard extends StatelessWidget {
                   Icon(
                     Icons.star,
                     size: 14,
-                    color: Colors.amber.shade700,
+                    color: AppColors.ratingGold,
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -77,6 +77,19 @@ class CocktailCard extends StatelessWidget {
       return Image.network(
         imageUrl!,
         fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: Colors.grey.shade200,
+            child: const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        },
         errorBuilder: (_, _, _) => _placeholder(),
       );
     }
@@ -88,8 +101,11 @@ class CocktailCard extends StatelessWidget {
 
   Widget _placeholder() {
     return Container(
-      color: Colors.grey.shade200,
-      child: Icon(Icons.local_bar, size: 36, color: Colors.grey.shade400),
+      color: AppColors.placeholderBg,
+      child: Semantics(
+        label: 'Cocktail placeholder',
+        child: Icon(Icons.local_bar, size: 36, color: AppColors.placeholderIcon),
+      ),
     );
   }
 }

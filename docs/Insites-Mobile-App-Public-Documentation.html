@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Insites Mobile Application - Public Documentation</title>
+  <style>
+    /* ── Combinate Brand Styling ── */
+    @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500&display=swap');
+
+    :root {
+      --cmb-blue: #1E43FF;
+      --cmb-black: #181818;
+      --cmb-grey: #4E4E4E;
+      --cmb-light-grey: #D1D1D1;
+      --cmb-ghost-white: #EFF2F9;
+      --cmb-smoke-white: #FDFDFD;
+      --cmb-white: #ffffff;
+      --app-primary: #2448C9;
+      --app-secondary: #F2437D;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Rubik', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-weight: 400;
+      color: var(--cmb-black);
+      line-height: 1.6;
+      background: var(--cmb-white);
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 32px;
+    }
+
+    /* ── Cover Page ── */
+    .cover {
+      background: var(--cmb-black);
+      color: var(--cmb-white);
+      padding: 80px 48px;
+      margin: -40px -32px 48px -32px;
+      position: relative;
+      overflow: hidden;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .cover::after {
+      content: '';
+      position: absolute;
+      top: -20%;
+      right: -10%;
+      width: 50%;
+      height: 140%;
+      background: var(--cmb-blue);
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.6;
+    }
+
+    .cover h1 {
+      font-size: 36px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cover .subtitle {
+      font-size: 18px;
+      font-weight: 300;
+      color: var(--cmb-light-grey);
+      position: relative;
+      z-index: 1;
+    }
+
+    .cover .version {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--cmb-light-grey);
+      margin-top: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Typography ── */
+    h1 {
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--cmb-black);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 3px solid var(--cmb-blue);
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--cmb-black);
+      margin-top: 40px;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--cmb-ghost-white);
+    }
+
+    h3 {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--cmb-grey);
+      margin-top: 28px;
+      margin-bottom: 8px;
+    }
+
+    h4 {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--cmb-grey);
+      margin-top: 20px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      margin-bottom: 12px;
+      color: var(--cmb-grey);
+      font-size: 15px;
+    }
+
+    /* ── Lists ── */
+    ul, ol {
+      margin-bottom: 12px;
+      padding-left: 24px;
+      color: var(--cmb-grey);
+      font-size: 15px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    /* ── Links ── */
+    a {
+      color: var(--cmb-blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* ── Tables ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px 0;
+      font-size: 14px;
+    }
+
+    th {
+      background: var(--cmb-ghost-white);
+      color: var(--cmb-black);
+      font-weight: 500;
+      text-align: left;
+      padding: 10px 14px;
+      border: 1px solid var(--cmb-light-grey);
+    }
+
+    td {
+      padding: 10px 14px;
+      border: 1px solid var(--cmb-light-grey);
+      color: var(--cmb-grey);
+    }
+
+    /* ── Screenshot Placeholder ── */
+    .screenshot-placeholder {
+      background: var(--cmb-ghost-white);
+      border: 2px dashed var(--cmb-light-grey);
+      border-radius: 8px;
+      padding: 40px 24px;
+      text-align: center;
+      margin: 16px 0 24px 0;
+      color: var(--cmb-grey);
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    .screenshot-placeholder .label {
+      font-weight: 500;
+      font-style: normal;
+      color: var(--cmb-black);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* ── Info Box ── */
+    .info-box {
+      background: var(--cmb-ghost-white);
+      border-left: 4px solid var(--cmb-blue);
+      padding: 14px 18px;
+      margin: 16px 0;
+      border-radius: 0 4px 4px 0;
+      font-size: 14px;
+      color: var(--cmb-grey);
+    }
+
+    .info-box strong {
+      color: var(--cmb-black);
+    }
+
+    /* ── Warning Box ── */
+    .warning-box {
+      background: #FFF8E6;
+      border-left: 4px solid #E6A800;
+      padding: 14px 18px;
+      margin: 16px 0;
+      border-radius: 0 4px 4px 0;
+      font-size: 14px;
+      color: var(--cmb-grey);
+    }
+
+    .warning-box strong {
+      color: #7A5900;
+    }
+
+    /* ── Badge / Tag ── */
+    .badge {
+      display: inline-block;
+      background: var(--cmb-blue);
+      color: var(--cmb-white);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Divider ── */
+    hr {
+      border: none;
+      border-top: 1px solid var(--cmb-light-grey);
+      margin: 40px 0;
+    }
+
+    /* ── Table of Contents ── */
+    .toc {
+      background: var(--cmb-ghost-white);
+      padding: 24px 32px;
+      border-radius: 8px;
+      margin: 24px 0 40px 0;
+    }
+
+    .toc h2 {
+      margin-top: 0;
+      border-bottom: none;
+      padding-bottom: 0;
+      font-size: 18px;
+    }
+
+    .toc ol {
+      color: var(--cmb-black);
+    }
+
+    .toc ol li {
+      margin-bottom: 4px;
+    }
+
+    .toc a {
+      color: var(--cmb-black);
+      font-weight: 400;
+    }
+
+    .toc a:hover {
+      color: var(--cmb-blue);
+    }
+
+    /* ── Step List ── */
+    .steps {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .steps li {
+      counter-increment: step;
+      padding: 12px 0 12px 48px;
+      position: relative;
+      border-bottom: 1px solid var(--cmb-ghost-white);
+    }
+
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 12px;
+      width: 32px;
+      height: 32px;
+      background: var(--cmb-blue);
+      color: var(--cmb-white);
+      border-radius: 50%;
+      text-align: center;
+      line-height: 32px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .steps li:last-child {
+      border-bottom: none;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 2px solid var(--cmb-ghost-white);
+      text-align: center;
+      color: var(--cmb-light-grey);
+      font-size: 13px;
+    }
+
+    /* ── Page Break ── */
+    .page-break {
+      page-break-before: always;
+    }
+
+    /* ── Print Styles ── */
+    @media print {
+      body { max-width: none; padding: 0; }
+      .cover { margin: 0 0 48px 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- COVER PAGE -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="cover">
+    <h1>Insites Mobile Application</h1>
+    <div class="subtitle">Public Documentation</div>
+    <div class="version">Version 0.0.5 &nbsp;|&nbsp; Last Updated: March 2026</div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- TABLE OF CONTENTS -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="toc">
+    <h2>Table of Contents</h2>
+    <ol>
+      <li><a href="#introduction">Introduction</a></li>
+      <li><a href="#getting-started">Getting Started</a></li>
+      <li><a href="#authentication">Authentication</a>
+        <ol>
+          <li><a href="#create-account">Creating an Account</a></li>
+          <li><a href="#email-verification">Email Verification</a></li>
+          <li><a href="#sign-in">Signing In</a></li>
+          <li><a href="#forgot-password">Forgot Password</a></li>
+        </ol>
+      </li>
+      <li><a href="#home-screen">Home Screen</a>
+        <ol>
+          <li><a href="#promo-banner">Promotional Banner</a></li>
+          <li><a href="#most-popular">Most Popular Section</a></li>
+          <li><a href="#newly-added">Newly Added Section</a></li>
+          <li><a href="#category-drawer">Category Drawer</a></li>
+        </ol>
+      </li>
+      <li><a href="#recipes">Recipes</a>
+        <ol>
+          <li><a href="#browse-recipes">Browsing Recipes</a></li>
+          <li><a href="#recipe-details">Viewing Recipe Details</a></li>
+          <li><a href="#add-recipe">Adding a New Recipe</a></li>
+          <li><a href="#edit-recipe">Editing a Recipe</a></li>
+          <li><a href="#recipe-images">Recipe Images</a></li>
+        </ol>
+      </li>
+      <li><a href="#favorites">Favorites</a>
+        <ol>
+          <li><a href="#add-favorite">Adding to Favorites</a></li>
+          <li><a href="#view-favorites">Viewing Your Favorites</a></li>
+          <li><a href="#remove-favorite">Removing a Favorite</a></li>
+        </ol>
+      </li>
+      <li><a href="#notifications">Notifications</a>
+        <ol>
+          <li><a href="#notification-types">Notification Types</a></li>
+          <li><a href="#manage-notifications">Managing Notifications</a></li>
+        </ol>
+      </li>
+      <li><a href="#profile">Profile &amp; Settings</a>
+        <ol>
+          <li><a href="#my-details">My Details</a></li>
+          <li><a href="#profile-picture">Profile Picture</a></li>
+          <li><a href="#change-password">Change Password</a></li>
+          <li><a href="#privacy-policy">Privacy Policy</a></li>
+          <li><a href="#terms-conditions">Terms &amp; Conditions</a></li>
+          <li><a href="#sign-out">Signing Out</a></li>
+        </ol>
+      </li>
+      <li><a href="#navigation">Navigation Overview</a></li>
+      <li><a href="#troubleshooting">Troubleshooting</a></li>
+    </ol>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- 1. INTRODUCTION -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <h1 id="introduction">1. Introduction</h1>
+
+  <p>
+    The <strong>Insites Mobile Application</strong> is a cross-platform mobile app built for Android and iOS devices. It provides users with a curated collection of cocktail recipes, allowing them to browse, create, and manage recipes from anywhere.
+  </p>
+
+  <p>Key capabilities of the application include:</p>
+  <ul>
+    <li><strong>Recipe Management</strong> &mdash; Browse, create, edit, and view detailed cocktail recipes with images, ingredients, and step-by-step instructions.</li>
+    <li><strong>Favorites</strong> &mdash; Save your preferred recipes locally for quick access.</li>
+    <li><strong>Notifications</strong> &mdash; Stay informed when new recipes are added to the collection.</li>
+    <li><strong>Profile Management</strong> &mdash; Update your personal details, profile picture, and password.</li>
+    <li><strong>Secure Authentication</strong> &mdash; Create an account with email verification and sign in securely.</li>
+  </ul>
+
+  <div class="info-box">
+    <strong>Supported Platforms:</strong> Android (API 21+) and iOS (14.0+). The app requires an active internet connection to load and manage recipes.
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- 2. GETTING STARTED -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <h1 id="getting-started">2. Getting Started</h1>
+
+  <h3>System Requirements</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Platform</th>
+        <th>Minimum Version</th>
+        <th>Recommended</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Android</td>
+        <td>API 21 (Android 5.0 Lollipop)</td>
+        <td>API 33+ (Android 13+)</td>
+      </tr>
+      <tr>
+        <td>iOS</td>
+        <td>iOS 14.0</td>
+        <td>iOS 16.0+</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Installation</h3>
+  <ol class="steps">
+    <li>Download the Insites Mobile Application from the <strong>Google Play Store</strong> (Android) or the <strong>Apple App Store</strong> (iOS).</li>
+    <li>Open the app after installation. You will be presented with the <strong>Welcome Screen</strong>.</li>
+    <li>Tap <strong>"CREATE AN ACCOUNT"</strong> to register a new account, or <strong>"SIGN IN"</strong> if you already have one.</li>
+  </ol>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Welcome Screen</span>
+    Add an annotated screenshot of the Welcome Screen showing the "CREATE AN ACCOUNT" and "SIGN IN" buttons.
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- 3. AUTHENTICATION -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <h1 id="authentication">3. Authentication</h1>
+
+  <p>
+    The Insites Mobile Application uses secure token-based authentication. All user sessions are encrypted and stored securely on your device.
+  </p>
+
+  <!-- 3.1 Create Account -->
+  <h2 id="create-account">3.1 Creating an Account</h2>
+
+  <p>To create a new account, follow these steps:</p>
+
+  <ol class="steps">
+    <li>From the Welcome Screen, tap <strong>"CREATE AN ACCOUNT"</strong>.</li>
+    <li>Fill in the required fields:
+      <ul>
+        <li><strong>First Name</strong> &mdash; Your first name.</li>
+        <li><strong>Last Name</strong> &mdash; Your last name.</li>
+        <li><strong>Email</strong> &mdash; A valid email address (e.g., <code>user@example.com</code>). This will be used for sign-in and verification.</li>
+        <li><strong>Password</strong> &mdash; Choose a secure password.</li>
+        <li><strong>Confirm Password</strong> &mdash; Re-enter your password to confirm it matches.</li>
+      </ul>
+    </li>
+    <li>Tap <strong>"CREATE AN ACCOUNT"</strong> to submit the registration form.</li>
+    <li>You will be redirected to the <strong>Email Verification</strong> screen.</li>
+  </ol>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Sign Up Screen</span>
+    Add an annotated screenshot of the Sign Up form showing all required fields and the "CREATE AN ACCOUNT" button.
+  </div>
+
+  <div class="info-box">
+    <strong>Form Validation:</strong> All fields are required. The email must be in a valid format, and both password fields must match. If any validation fails, error messages will appear below the relevant field.
+  </div>
+
+  <!-- 3.2 Email Verification -->
+  <h2 id="email-verification">3.2 Email Verification</h2>
+
+  <p>After creating an account, you must verify your email address before signing in.</p>
+
+  <ol class="steps">
+    <li>On the <strong>Verify Your Email</strong> screen, your registered email address is displayed.</li>
+    <li>Tap <strong>"SEND VERIFICATION EMAIL"</strong> to receive a verification link in your inbox.</li>
+    <li>Open the email and click the verification link.</li>
+    <li>Return to the app and tap <strong>"I'VE ALREADY VERIFIED"</strong> to proceed to the Sign In screen.</li>
+  </ol>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Verify Email Screen</span>
+    Add an annotated screenshot showing the email display, "SEND VERIFICATION EMAIL" button, and "I'VE ALREADY VERIFIED" button.
+  </div>
+
+  <div class="info-box">
+    <strong>Resend Cooldown:</strong> After sending a verification email, a 30-second cooldown applies before you can request another one. The button displays a countdown timer during this period.
+  </div>
+
+  <div class="warning-box">
+    <strong>Important:</strong> If you attempt to sign in before verifying your email, you will be redirected back to the Verify Email screen.
+  </div>
+
+  <!-- 3.3 Sign In -->
+  <h2 id="sign-in">3.3 Signing In</h2>
+
+  <p>To sign in to your account:</p>
+
+  <ol class="steps">
+    <li>From the Welcome Screen, tap <strong>"SIGN IN"</strong>.</li>
+    <li>Enter your registered <strong>Email</strong> and <strong>Password</strong>.</li>
+    <li>Tap <strong>"SIGN IN"</strong> to authenticate.</li>
+    <li>Upon successful authentication, you will be taken to the <strong>Home Screen</strong>.</li>
+  </ol>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Sign In Screen</span>
+    Add an annotated screenshot of the Sign In form showing the Email field, Password field, "Forgot Password" link, and "SIGN IN" button.
+  </div>
+
+  <p>If your credentials are incorrect, an error banner will appear at the top of the form describing the issue.</p>
+
+  <div class="info-box">
+    <strong>Session Persistence:</strong> Once signed in, the app remembers your session. You will not need to sign in again unless you explicitly sign out or your session expires.
+  </div>
+
+  <!-- 3.4 Forgot Password -->
+  <h2 id="forgot-password">3.4 Forgot Password</h2>
+
+  <p>
+    If you have forgotten your password, tap the <strong>"Forgot Password"</strong> link on the Sign In screen. This feature allows you to reset your password via email.
+  </p>
+
+  <div class="info-box">
+    <strong>Note:</strong> The Forgot Password flow will redirect you to an external password reset page where you can set a new password.
+  </div>
+
+  <hr>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- 4. HOME SCREEN -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <h1 id="home-screen">4. Home Screen</h1>
+
+  <p>
+    The Home Screen is the main landing page of the app. It displays a personalized overview of the recipe collection, featuring popular and recently added cocktails.
+  </p>
+
+  <p>The top section includes:</p>
+  <ul>
+    <li>The <strong>Insites logo</strong> in the header area.</li>
+    <li>A prompt: <strong>"What are you looking for?"</strong></li>
+    <li>A <strong>search bar</strong> for searching cocktail recipes.</li>
+    <li>A <strong>menu icon</strong> to open the Category Drawer.</li>
+  </ul>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Home Screen</span>
+    Add an annotated screenshot of the Home Screen showing the header, search bar, promotional banner, and recipe sections.
+  </div>
+
+  <!-- 4.1 Promo Banner -->
+  <h2 id="promo-banner">4.1 Promotional Banner</h2>
+
+  <p>
+    A prominent promotional banner is displayed below the search bar. The default banner reads <strong>"Cocktail Party - We got you!"</strong> with a <strong>"SEE ALL RECIPES"</strong> call-to-action button that navigates to the full Cocktails List.
+  </p>
+
+  <!-- 4.2 Most Popular -->
+  <h2 id="most-popular">4.2 Most Popular Section</h2>
+
+  <p>
+    This section showcases the top 4 highest-rated cocktail recipes. Recipes are sorted by rating in descending order. Each recipe is displayed as a card with:
+  </p>
+  <ul>
+    <li>Recipe image</li>
+    <li>Recipe name</li>
+    <li>Star rating</li>
+  </ul>
+  <p>Tap a <strong>"SEE ALL"</strong> link in the section header to view the complete list. Tap any recipe card to view its details.</p>
+
+  <!-- 4.3 Newly Added -->
+  <h2 id="newly-added">4.3 Newly Added Section</h2>
+
+  <p>
+    This section displays the 4 most recently added recipes. It functions identically to the Most Popular section but sorts by the order in which recipes were added (newest first).
+  </p>
+
+  <!-- 4.4 Category Drawer -->
+  <h2 id="category-drawer">4.4 Category Drawer</h2>
+
+  <p>
+    Tap the <strong>menu icon</strong> in the top-right corner of the header to open the Category Drawer. The drawer slides in from the right and provides quick navigation to recipe categories such as:
+  </p>
+  <ul>
+    <li>Sandwiches</li>
+    <li>Cocktails</li>
+    <li>Additional categories as they become available</li>
+  </ul>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Category Drawer</span>
+    Add an annotated screenshot of the Category Drawer showing the menu icon that opens it and the available categories.
+  </div>
+
+  <hr>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- 5. RECIPES -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <h1 id="recipes">5. Recipes</h1>
+
+  <p>
+    The Recipes feature is the core of the Insites Mobile Application. It allows you to browse the full collection of cocktail recipes, view detailed preparation instructions, and contribute your own recipes.
+  </p>
+
+  <!-- 5.1 Browse Recipes -->
+  <h2 id="browse-recipes">5.1 Browsing Recipes</h2>
+
+  <p>
+    The <strong>Cocktails List</strong> screen displays every recipe in the database. You can reach this screen from:
+  </p>
+  <ul>
+    <li>The <strong>"SEE ALL RECIPES"</strong> button on the Home Screen promotional banner.</li>
+    <li>The <strong>"SEE ALL"</strong> link on any section header (Most Popular, Newly Added).</li>
+    <li>The Category Drawer by selecting the <strong>Cocktails</strong> category.</li>
+  </ul>
+
+  <p>Each recipe in the list is displayed as a card showing:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Element</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Image</td>
+        <td>A 16:10 aspect ratio image of the cocktail. A placeholder icon is shown if no image is available.</td>
+      </tr>
+      <tr>
+        <td>Name</td>
+        <td>The name of the cocktail recipe.</td>
+      </tr>
+      <tr>
+        <td>Rating</td>
+        <td>A star icon with a numeric rating (e.g., 4.5) if available.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Cocktails List Screen</span>
+    Add an annotated screenshot of the Cocktails List showing the recipe cards with image, name, and rating elements highlighted.
+  </div>
+
+  <h3>Pull to Refresh</h3>
+  <p>
+    Pull down on the list to refresh the recipe data from the server. The list will reload with the latest recipes.
+  </p>
+
+  <!-- 5.2 Recipe Details -->
+  <h2 id="recipe-details">5.2 Viewing Recipe Details</h2>
+
+  <p>
+    Tap any recipe card to open the <strong>Cocktail Detail</strong> screen. This screen provides a comprehensive view of the recipe, structured as follows:
+  </p>
+
+  <h4>Hero Image</h4>
+  <p>
+    A full-width image is displayed at the top of the screen. Navigation controls are overlaid on the image:
+  </p>
+  <ul>
+    <li><strong>Back arrow</strong> (top-left) &mdash; Returns to the previous screen.</li>
+    <li><strong>Edit icon</strong> (top-right) &mdash; Opens the recipe in edit mode.</li>
+  </ul>
+
+  <h4>Recipe Information</h4>
+  <p>Below the hero image, the following details are displayed:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Category Badge</td>
+        <td>A label indicating the recipe type (e.g., "Cocktail").</td>
+      </tr>
+      <tr>
+        <td>Rating</td>
+        <td>A star icon with the numeric rating value.</td>
+      </tr>
+      <tr>
+        <td>Name</td>
+        <td>The cocktail name in bold heading text.</td>
+      </tr>
+      <tr>
+        <td>Favorites Toggle</td>
+        <td>"ADD TO FAVORITES" / "REMOVE FAVORITE" link with a heart icon.</td>
+      </tr>
+      <tr>
+        <td>Duration</td>
+        <td>Preparation time in minutes (e.g., "Duration: 10 minutes").</td>
+      </tr>
+      <tr>
+        <td>Amount</td>
+        <td>Number of servings (e.g., "Amount: 2 servings").</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>Tabbed Content</h4>
+  <p>
+    Recipe content is organized into two tabs:
+  </p>
+  <ul>
+    <li><strong>Ingredients</strong> &mdash; A numbered list of all ingredients required for the recipe.</li>
+    <li><strong>Instructions</strong> &mdash; Step-by-step preparation instructions.</li>
+  </ul>
+  <p>Tap either tab to switch between Ingredients and Instructions. The active tab is highlighted with a pink accent color.</p>
+
+  <h4>Leave a Review</h4>
+  <p>
+    At the bottom of the screen, a <strong>"LEAVE A REVIEW"</strong> button allows you to submit feedback about the recipe.
+  </p>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Cocktail Detail Screen</span>
+    Add an annotated screenshot showing the hero image, recipe information, tab bar (Ingredients/Instructions), and "LEAVE A REVIEW" button.
+  </div>
+
+  <!-- 5.3 Add Recipe -->
+  <h2 id="add-recipe">5.3 Adding a New Recipe</h2>
+
+  <p>
+    To add a new cocktail recipe, tap the <strong>center "+" button</strong> on the bottom navigation bar. This opens the <strong>Add Recipe</strong> screen.
+  </p>
+
+  <p>Complete the following fields:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Required</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Name</td>
+        <td>Yes</td>
+        <td>The name of the cocktail recipe.</td>
+      </tr>
+      <tr>
+        <td>Keywords</td>
+        <td>No</td>
+        <td>Tags to categorize the recipe. Type a keyword and tap the add button to create a tag chip. Tap the "x" on any chip to remove it.</td>
+      </tr>
+      <tr>
+        <td>Duration (min)</td>
+        <td>No</td>
+        <td>Preparation time in minutes (numeric value).</td>
+      </tr>
+      <tr>
+        <td>Amount (servings)</td>
+        <td>No</td>
+        <td>Number of servings the recipe yields (numeric value).</td>
+      </tr>
+      <tr>
+        <td>Image</td>
+        <td>No</td>
+        <td>Upload a photo of the finished cocktail from your device gallery.</td>
+      </tr>
+      <tr>
+        <td>Ingredients</td>
+        <td>No</td>
+        <td>List of ingredients, one per line.</td>
+      </tr>
+      <tr>
+        <td>Instructions</td>
+        <td>No</td>
+        <td>Step-by-step preparation instructions.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Add Recipe Screen</span>
+    Add an annotated screenshot of the Add Recipe form showing the Name field, Keywords chips, Duration/Amount fields, Image picker, Ingredients, and Instructions text areas.
+  </div>
+
+  <h3>Submitting the Recipe</h3>
+  <ol class="steps">
+    <li>Fill in the recipe details. At minimum, a <strong>Name</strong> is required.</li>
+    <li>Optionally, tap the <strong>image area</strong> to select a photo from your gallery.</li>
+    <li>Tap <strong>"SAVE"</strong> to submit the recipe.</li>
+    <li>A success message will appear confirming the recipe was added. You will be redirected to the Cocktails List.</li>
+  </ol>
+
+  <p>Tap <strong>"CANCEL"</strong> to clear the form and start over.</p>
+
+  <div class="info-box">
+    <strong>Image Upload:</strong> Images are automatically optimized (max 1200px, 85% quality) before uploading to keep file sizes manageable.
+  </div>
+
+  <!-- 5.4 Edit Recipe -->
+  <h2 id="edit-recipe">5.4 Editing a Recipe</h2>
+
+  <p>To edit an existing recipe:</p>
+
+  <ol class="steps">
+    <li>Navigate to the recipe's <strong>Detail Screen</strong>.</li>
+    <li>Tap the <strong>edit icon</strong> (pencil) in the top-right corner of the hero image.</li>
+    <li>The <strong>Edit Recipe</strong> screen will open with all fields pre-populated with the current recipe data.</li>
+    <li>Make your changes and tap <strong>"UPDATE"</strong> to save.</li>
+    <li>A success message will confirm the update, and you will be returned to the Detail Screen with the refreshed data.</li>
+  </ol>
+
+  <p>Tap <strong>"CANCEL"</strong> to discard changes and return to the Detail Screen.</p>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Edit Recipe Screen</span>
+    Add an annotated screenshot of the Edit Recipe form showing the pre-populated fields and the "UPDATE" and "CANCEL" buttons.
+  </div>
+
+  <!-- 5.5 Recipe Images -->
+  <h2 id="recipe-images">5.5 Recipe Images</h2>
+
+  <p>
+    Recipe images are stored in the cloud and loaded dynamically. When adding or editing a recipe:
+  </p>
+  <ul>
+    <li>Tap the <strong>image picker area</strong> to select a photo from your device gallery.</li>
+    <li>A preview of the selected image is shown before submission.</li>
+    <li>When editing, the existing image is displayed. Selecting a new image will replace it upon saving.</li>
+    <li>If no image is provided, a placeholder icon is displayed in the recipe card and detail view.</li>
+  </ul>
+
+  <hr>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- 6. FAVORITES -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <h1 id="favorites">6. Favorites</h1>
+
+  <p>
+    The Favorites feature allows you to bookmark your preferred cocktail recipes for quick access. Favorites are stored locally on your device and are tied to your user account.
+  </p>
+
+  <!-- 6.1 Add Favorite -->
+  <h2 id="add-favorite">6.1 Adding to Favorites</h2>
+
+  <p>You can add a recipe to your favorites from the <strong>Cocktail Detail</strong> screen:</p>
+
+  <ol class="steps">
+    <li>Open any recipe's Detail Screen.</li>
+    <li>Look for the <strong>"ADD TO FAVORITES"</strong> text with a heart icon, located next to the recipe name.</li>
+    <li>Tap it to add the recipe to your favorites. The heart icon will turn red and the text will change to <strong>"REMOVE FAVORITE"</strong>.</li>
+  </ol>
+
+  <!-- 6.2 View Favorites -->
+  <h2 id="view-favorites">6.2 Viewing Your Favorites</h2>
+
+  <p>
+    Tap the <strong>heart icon</strong> (4th tab) on the bottom navigation bar to view all your saved favorites.
+  </p>
+
+  <p>
+    Your favorites are displayed in a <strong>2-column grid</strong> layout. Each card shows the recipe image, name, and rating. Tap any card to open its Detail Screen.
+  </p>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Favorites Tab</span>
+    Add an annotated screenshot of the Favorites Tab showing the grid layout with recipe cards. Include a second screenshot of the empty state showing the "No favorites added" message and "ADD FAVORITES" button.
+  </div>
+
+  <h3>Empty State</h3>
+  <p>
+    If you have not added any favorites yet, the screen displays:
+  </p>
+  <ul>
+    <li>A heading: <strong>"No favorites added"</strong></li>
+    <li>A message: <em>"There are no recipes added in your favorites."</em></li>
+    <li>An <strong>"ADD FAVORITES"</strong> button that navigates to the Cocktails List so you can browse and add recipes.</li>
+  </ul>
+
+  <!-- 6.3 Remove Favorite -->
+  <h2 id="remove-favorite">6.3 Removing a Favorite</h2>
+
+  <p>To remove a recipe from your favorites:</p>
+  <ol class="steps">
+    <li>Open the recipe's Detail Screen.</li>
+    <li>Tap the <strong>"REMOVE FAVORITE"</strong> text (displayed when the recipe is already favorited).</li>
+    <li>The heart icon will revert to an outline, and the recipe will be removed from your Favorites tab.</li>
+  </ol>
+
+  <hr>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- 7. NOTIFICATIONS -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <h1 id="notifications">7. Notifications</h1>
+
+  <p>
+    The Notifications feature keeps you informed about new content added to the recipe collection. Tap the <strong>bell icon</strong> (2nd tab) on the bottom navigation bar to access your notifications.
+  </p>
+
+  <!-- 7.1 Notification Types -->
+  <h2 id="notification-types">7.1 Notification Types</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Trigger</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>New Recipe</td>
+        <td>A new cocktail recipe is added to the database</td>
+        <td>Notifies you that a new recipe is available, including the recipe name in the notification body.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Each notification displays:</p>
+  <ul>
+    <li><strong>Title</strong> &mdash; A brief heading (e.g., "New cocktail added").</li>
+    <li><strong>Body</strong> &mdash; A description with details about the new content.</li>
+    <li><strong>Timestamp</strong> &mdash; A relative time indicator (e.g., "5m ago", "2h ago", "Yesterday").</li>
+    <li><strong>Read/Unread Status</strong> &mdash; Unread notifications appear in bold text.</li>
+  </ul>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Notifications Tab</span>
+    Add an annotated screenshot of the Notifications Tab showing a list of notifications with read/unread states and timestamps. Include an annotation showing the swipe gesture directions.
+  </div>
+
+  <!-- 7.2 Manage Notifications -->
+  <h2 id="manage-notifications">7.2 Managing Notifications</h2>
+
+  <p>Notifications can be managed using swipe gestures:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Gesture</th>
+        <th>Action</th>
+        <th>Visual Indicator</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Swipe left to right</td>
+        <td>Toggle read/unread status</td>
+        <td>Green background ("Mark as Read") or yellow background ("Mark as Unread")</td>
+      </tr>
+      <tr>
+        <td>Swipe right to left</td>
+        <td>Delete the notification</td>
+        <td>Red background with "Delete" text</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Empty State</h3>
+  <p>
+    If there are no notifications, the screen displays a centered message: <em>"No notifications yet"</em>.
+  </p>
+
+  <hr>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- 8. PROFILE & SETTINGS -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <h1 id="profile">8. Profile &amp; Settings</h1>
+
+  <p>
+    The Profile tab is the central hub for managing your account. Tap the <strong>person icon</strong> (5th tab) on the bottom navigation bar to access it.
+  </p>
+
+  <p>The Profile screen is organized into three sections:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Section</th>
+        <th>Options</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Account Details</td>
+        <td>My Details</td>
+      </tr>
+      <tr>
+        <td>Settings</td>
+        <td>Change Password</td>
+      </tr>
+      <tr>
+        <td>About Insites</td>
+        <td>Privacy Policy, Terms &amp; Conditions, Help us improve</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>The <strong>Log Out</strong> button and <strong>app version number</strong> are displayed at the bottom of the screen.</p>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Profile Tab</span>
+    Add an annotated screenshot of the Profile Tab showing all sections (Account Details, Settings, About Insites), the Log Out button, and the app version number.
+  </div>
+
+  <!-- 8.1 My Details -->
+  <h2 id="my-details">8.1 My Details</h2>
+
+  <p>
+    Tap <strong>"My Details"</strong> to view and edit your personal information.
+  </p>
+
+  <p>The following fields are available for editing:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Profile Picture</td>
+        <td>Upload or change your profile photo (see <a href="#profile-picture">8.2 Profile Picture</a>).</td>
+      </tr>
+      <tr>
+        <td>First Name</td>
+        <td>Your first name. Pre-filled with your current data.</td>
+      </tr>
+      <tr>
+        <td>Last Name</td>
+        <td>Your last name. Pre-filled with your current data.</td>
+      </tr>
+      <tr>
+        <td>Email</td>
+        <td>Your email address. Pre-filled with your current data.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Tap <strong>"UPDATE MY DETAILS"</strong> to save changes, or <strong>"CANCEL"</strong> to discard and return to the Profile tab.</p>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: My Details Screen</span>
+    Add an annotated screenshot of the My Details screen showing the profile picture area, form fields, and action buttons.
+  </div>
+
+  <div class="info-box">
+    <strong>Partial Updates:</strong> Only fields that differ from your current data will be sent to the server. You can update a single field without affecting others.
+  </div>
+
+  <!-- 8.2 Profile Picture -->
+  <h2 id="profile-picture">8.2 Profile Picture</h2>
+
+  <p>
+    To upload or change your profile picture:
+  </p>
+
+  <ol class="steps">
+    <li>On the <strong>My Details</strong> screen, tap the <strong>circular profile picture area</strong> or the <strong>"UPLOAD IMAGE"</strong> button.</li>
+    <li>Choose your image source:
+      <ul>
+        <li><strong>Camera</strong> &mdash; Take a new photo using your device camera.</li>
+        <li><strong>Gallery</strong> &mdash; Select an existing photo from your device.</li>
+      </ul>
+    </li>
+    <li>A preview of the selected image will appear in the circular area.</li>
+    <li>Tap <strong>"UPDATE MY DETAILS"</strong> to upload and save the new profile picture.</li>
+  </ol>
+
+  <!-- 8.3 Change Password -->
+  <h2 id="change-password">8.3 Change Password</h2>
+
+  <p>To change your password:</p>
+
+  <ol class="steps">
+    <li>Navigate to <strong>Profile > Settings > Change Password</strong>.</li>
+    <li>Enter your new password in the <strong>"New Password"</strong> field.</li>
+    <li>Use the <strong>eye icon</strong> to toggle password visibility if needed.</li>
+    <li>Tap <strong>"CHANGE PASSWORD"</strong> to submit.</li>
+  </ol>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Change Password Screen</span>
+    Add an annotated screenshot of the Change Password screen showing the password field, visibility toggle, and action buttons.
+  </div>
+
+  <div class="warning-box">
+    <strong>Automatic Sign-Out:</strong> You will be automatically signed out after successfully changing your password. You will need to sign in again with your new password.
+  </div>
+
+  <!-- 8.4 Privacy Policy -->
+  <h2 id="privacy-policy">8.4 Privacy Policy</h2>
+
+  <p>
+    Tap <strong>"Privacy Policy"</strong> under the About Insites section to read the application's privacy policy. This screen displays the full privacy policy text in a scrollable view.
+  </p>
+
+  <!-- 8.5 Terms & Conditions -->
+  <h2 id="terms-conditions">8.5 Terms &amp; Conditions</h2>
+
+  <p>
+    Tap <strong>"Terms &amp; Conditions"</strong> under the About Insites section to read the application's terms of use. This screen displays the full terms and conditions text in a scrollable view.
+  </p>
+
+  <div class="info-box">
+    <strong>Legal Acknowledgment:</strong> By creating an account and using the app, you agree to the Terms and Privacy policies. Links to these documents are also available on the Welcome Screen.
+  </div>
+
+  <!-- 8.6 Sign Out -->
+  <h2 id="sign-out">8.6 Signing Out</h2>
+
+  <p>To sign out of your account:</p>
+
+  <ol class="steps">
+    <li>Navigate to the <strong>Profile</strong> tab.</li>
+    <li>Scroll to the bottom and tap the <strong>"Log Out"</strong> button (displayed in red text).</li>
+    <li>A confirmation dialog will appear asking: <em>"Are you sure you want to sign out?"</em></li>
+    <li>Tap <strong>"Sign Out"</strong> to confirm, or <strong>"Cancel"</strong> to stay signed in.</li>
+    <li>After signing out, you will be redirected to the <strong>Welcome Screen</strong>.</li>
+  </ol>
+
+  <div class="info-box">
+    <strong>Data Persistence:</strong> Signing out clears your authentication session. Your favorites and notifications are stored per-account and will be restored when you sign back in on the same device.
+  </div>
+
+  <hr>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- 9. NAVIGATION OVERVIEW -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <h1 id="navigation">9. Navigation Overview</h1>
+
+  <p>
+    The Insites Mobile Application uses a <strong>5-tab bottom navigation bar</strong> as its primary navigation method. Each tab maintains its own navigation history, allowing you to navigate within a tab without losing your place in other tabs.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tab</th>
+        <th>Icon</th>
+        <th>Label</th>
+        <th>Destination</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>Home</td>
+        <td>Home</td>
+        <td>Home Screen with featured recipes</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Bell</td>
+        <td>Notifications</td>
+        <td>Notifications list</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Plus (+)</td>
+        <td>Add</td>
+        <td>Add Recipe form</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Heart</td>
+        <td>Favorites</td>
+        <td>Your saved favorite recipes</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>Person</td>
+        <td>Profile</td>
+        <td>Account management and settings</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="screenshot-placeholder">
+    <span class="label">Screenshot: Bottom Navigation Bar</span>
+    Add an annotated screenshot of the bottom navigation bar with each tab icon and label clearly labeled.
+  </div>
+
+  <h3>Navigation Flow Diagram</h3>
+
+  <p>The following diagram illustrates the main navigation paths through the application:</p>
+
+  <div class="info-box" style="font-family: monospace; font-size: 13px; line-height: 1.8; white-space: pre;">App Launch
+  |
+  v
+Splash Screen (2 seconds)
+  |
+  +-- Authenticated ----> Home Screen (5 tabs)
+  |                         |
+  |                         +-- Tab 1: Home Tab
+  |                         |     +-- Cocktail Detail
+  |                         |     +-- Cocktails List
+  |                         |
+  |                         +-- Tab 2: Notifications
+  |                         |
+  |                         +-- Tab 3: Add Recipe
+  |                         |
+  |                         +-- Tab 4: Favorites
+  |                         |     +-- Cocktail Detail
+  |                         |
+  |                         +-- Tab 5: Profile
+  |                               +-- My Details
+  |                               +-- Change Password
+  |                               +-- Privacy Policy
+  |                               +-- Terms &amp; Conditions
+  |
+  +-- Not Authenticated --> Welcome Screen
+                              |
+                              +-- Sign In
+                              |     +-- Home Screen (on success)
+                              |     +-- Verify Email (if unverified)
+                              |
+                              +-- Sign Up
+                                    +-- Verify Email
+                                          +-- Sign In</div>
+
+  <hr>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- 10. TROUBLESHOOTING -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <h1 id="troubleshooting">10. Troubleshooting</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 35%;">Issue</th>
+        <th>Solution</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Cannot sign in</strong></td>
+        <td>
+          <ul>
+            <li>Verify your email address is correct.</li>
+            <li>Check that your email has been verified (see <a href="#email-verification">Section 3.2</a>).</li>
+            <li>Try resetting your password using the "Forgot Password" link.</li>
+            <li>Ensure you have an active internet connection.</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Verification email not received</strong></td>
+        <td>
+          <ul>
+            <li>Check your spam/junk folder.</li>
+            <li>Wait for the 30-second cooldown, then tap "RESEND VERIFICATION EMAIL".</li>
+            <li>Ensure the email address you registered with is correct.</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Recipes not loading</strong></td>
+        <td>
+          <ul>
+            <li>Check your internet connection.</li>
+            <li>Pull down on the list to trigger a manual refresh.</li>
+            <li>Close and reopen the app.</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Image upload fails</strong></td>
+        <td>
+          <ul>
+            <li>Ensure you have granted the app permission to access your photos.</li>
+            <li>Check your internet connection. Image uploads require a stable connection.</li>
+            <li>Try selecting a smaller image.</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Favorites not showing</strong></td>
+        <td>
+          <ul>
+            <li>Favorites are stored locally per device. If you recently reinstalled the app or cleared app data, your favorites will need to be re-added.</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Signed out after changing password</strong></td>
+        <td>
+          <ul>
+            <li>This is expected behavior. After changing your password, you are automatically signed out for security. Sign in with your new password.</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>App crashing or unresponsive</strong></td>
+        <td>
+          <ul>
+            <li>Force close the app and reopen it.</li>
+            <li>Ensure your device OS is updated to a supported version.</li>
+            <li>Clear the app cache from your device settings.</li>
+            <li>Reinstall the app if the issue persists.</li>
+          </ul>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- FOOTER -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div class="footer">
+    <p><strong>Insites Mobile Application</strong> &mdash; Version 0.0.5</p>
+    <p>Built by Combinate</p>
+    <p style="margin-top: 8px;">This document was last updated in March 2026.</p>
+  </div>
+
+</body>
+</html>
