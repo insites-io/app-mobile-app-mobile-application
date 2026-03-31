@@ -1,5 +1,7 @@
 # Environment secrets
 .env
+android/key.properties
+*.jks
 
 # Miscellaneous
 *.class

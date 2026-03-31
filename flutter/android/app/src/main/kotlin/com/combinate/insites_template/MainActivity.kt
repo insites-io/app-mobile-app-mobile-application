@@ -1,4 +1,4 @@
-package com.example.insites_application
+package com.combinate.insites_template
 
 import io.flutter.embedding.android.FlutterActivity
 
