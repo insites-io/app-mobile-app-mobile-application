@@ -20,6 +20,12 @@ class ApiConfig {
   /// Instance API key loaded from .env at startup.
   static String get iiaApiKey => dotenv.env['IIA_API_KEY'] ?? '';
 
+  /// Terms & Conditions page URL.
+  static const String termsUrl = '$baseUrl/terms-and-conditions';
+
+  /// Privacy Policy page URL.
+  static const String privacyPolicyUrl = '$baseUrl/privacy-policy';
+
   /// Builds the full public URL for an uploaded file path.
   static String imageUrl(String path) =>
       '$uploadsBaseUrl/instances/$instanceId/property_uploads/$path';

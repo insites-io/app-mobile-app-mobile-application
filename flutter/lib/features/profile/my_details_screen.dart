@@ -239,21 +239,21 @@ class _MyDetailsScreenState extends State<MyDetailsScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'File Formats: AAA, AAA, AAA or AAA.',
+                      'File Formats: PNG, JPG, WEBP.',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
                       ),
                     ),
                     Text(
-                      'Recommended Dimensions: 000px by 000px',
+                      'Recommended Dimensions: 500px by 500px',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
                       ),
                     ),
                     Text(
-                      'Recommended File Size: 00 KB',
+                      'Recommended File Size: 500 KB',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,

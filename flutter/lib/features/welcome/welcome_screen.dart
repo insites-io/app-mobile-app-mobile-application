@@ -1,6 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../config/api_config.dart';
 import '../../config/app_colors.dart';
 import '../../core/widgets/widgets.dart';
 import '../authentication/sign_in/sign_in_screen.dart';
@@ -138,7 +140,10 @@ class _LegalDisclaimer extends StatelessWidget {
             ),
             recognizer: TapGestureRecognizer()
               ..onTap = () {
-                // TODO: Navigate to Terms
+                launchUrl(
+                  Uri.parse(ApiConfig.termsUrl),
+                  mode: LaunchMode.externalApplication,
+                );
               },
           ),
           const TextSpan(text: ' and '),
@@ -151,7 +156,10 @@ class _LegalDisclaimer extends StatelessWidget {
             ),
             recognizer: TapGestureRecognizer()
               ..onTap = () {
-                // TODO: Navigate to Privacy
+                launchUrl(
+                  Uri.parse(ApiConfig.privacyPolicyUrl),
+                  mode: LaunchMode.externalApplication,
+                );
               },
           ),
           const TextSpan(text: ' policies.'),

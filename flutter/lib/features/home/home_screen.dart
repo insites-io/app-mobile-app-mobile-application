@@ -143,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 20, 8, 0),
+                padding: const EdgeInsets.fromLTRB(8, 20, 8, 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: List.generate(
