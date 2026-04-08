@@ -61,9 +61,9 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/Insites-Mobile-App-Icon-1024.png"
+  image_path: "assets/images/ins-app-icon.png"
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/images/Insites-Mobile-App-Icon-1024.png"
+  adaptive_icon_foreground: "assets/images/ins-app-icon.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
