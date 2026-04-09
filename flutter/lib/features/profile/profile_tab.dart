@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../config/app_colors.dart';
-import '../../core/widgets/widgets.dart';
 import '../authentication/bloc/auth_bloc.dart';
 import '../authentication/bloc/auth_event.dart';
 import '../authentication/bloc/auth_state.dart';
@@ -30,7 +29,6 @@ class _ProfileTabState extends State<ProfileTab> {
         return Scaffold(
           key: _scaffoldKey,
           backgroundColor: const Color(0xFFFCFCFC),
-          endDrawer: const AppCategoryDrawer(),
           appBar: AppBar(
             backgroundColor: AppColors.primary,
             elevation: 0,
@@ -43,13 +41,6 @@ class _ProfileTabState extends State<ProfileTab> {
               ),
             ),
             centerTitle: true,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
-                onPressed: () =>
-                    _scaffoldKey.currentState?.openEndDrawer(),
-              ),
-            ],
           ),
           body: Column(
             children: [
@@ -93,7 +84,6 @@ class _ProfileTabState extends State<ProfileTab> {
                         ),
                       );
                     }),
-                    _MenuTile(title: 'Help us improve', onTap: () {}),
                     const SizedBox(height: 32),
                     _LogOutButton(
                       onPressed: () => _confirmLogout(context),

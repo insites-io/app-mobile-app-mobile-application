@@ -38,13 +38,11 @@ class _CocktailsListScreenState extends State<CocktailsListScreen> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.white,
-      endDrawer: const AppCategoryDrawer(),
       body: Column(
         children: [
-          AppHeader(
+          const AppHeader(
             title: 'Cocktails',
             showBackButton: true,
-            onMenuTap: () => _scaffoldKey.currentState?.openEndDrawer(),
           ),
           Expanded(
             child: BlocBuilder<CocktailBloc, CocktailState>(

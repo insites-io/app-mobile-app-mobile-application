@@ -251,16 +251,16 @@ class _CocktailDetailScreenState extends State<CocktailDetailScreen>
             ),
           ),
 
-          // ── Leave a Review ──
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-              child: AppPrimaryButton(
-                label: 'LEAVE A REVIEW',
-                onPressed: () {},
-              ),
-            ),
-          ),
+          // // ── Leave a Review ──
+          // SafeArea(
+          //   child: Padding(
+          //     padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          //     child: AppPrimaryButton(
+          //       label: 'LEAVE A REVIEW',
+          //       onPressed: () {},
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );

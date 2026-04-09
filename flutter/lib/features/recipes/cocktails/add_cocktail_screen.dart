@@ -182,14 +182,12 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
       child: Scaffold(
         key: _scaffoldKey,
         backgroundColor: Colors.white,
-        endDrawer: const AppCategoryDrawer(),
         body: Column(
           children: [
             AppHeader(
               title: _isEditing ? 'Edit Recipe' : 'Add Recipe',
               showBackButton: _isEditing,
-              showMenuIcon: !_isEditing,
-              onMenuTap: () => _scaffoldKey.currentState?.openEndDrawer(),
+              showMenuIcon: false,
             ),
             Expanded(
               child: SingleChildScrollView(

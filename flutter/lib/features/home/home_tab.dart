@@ -48,7 +48,6 @@ class _HomeTabState extends State<HomeTab> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: const Color(0xFFF5F5F5),
-      endDrawer: const AppCategoryDrawer(),
       body: BlocBuilder<CocktailBloc, CocktailState>(
         builder: (context, state) {
           final cocktails =
@@ -67,8 +66,6 @@ class _HomeTabState extends State<HomeTab> {
             slivers: [
               SliverToBoxAdapter(
                 child: _HomeHeader(
-                  onMenuTap: () =>
-                      _scaffoldKey.currentState?.openEndDrawer(),
                   onSearchChanged: (_) {},
                 ),
               ),
@@ -150,11 +147,9 @@ class _HomeTabState extends State<HomeTab> {
 
 class _HomeHeader extends StatelessWidget {
   const _HomeHeader({
-    required this.onMenuTap,
     required this.onSearchChanged,
   });
 
-  final VoidCallback onMenuTap;
   final void Function(String) onSearchChanged;
 
   @override
@@ -185,14 +180,6 @@ class _HomeHeader extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      IconButton(
-                        onPressed: onMenuTap,
-                        icon: const Icon(
-                          Icons.menu,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
                     ],
                   ),
                 ),

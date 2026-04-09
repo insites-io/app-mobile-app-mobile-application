@@ -10,7 +10,7 @@ class AppHeader extends StatelessWidget {
     super.key,
     required this.title,
     this.showBackButton = false,
-    this.showMenuIcon = true,
+    this.showMenuIcon = false,
     this.onMenuTap,
   });
 
