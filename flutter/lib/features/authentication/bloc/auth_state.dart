@@ -71,6 +71,47 @@ final class AuthProfileError extends AuthState {
   List<Object?> get props => [user.id, error];
 }
 
+/// A forgot-password request is in flight. Rendered as a loading state on
+/// the Forgot Password screen without clobbering the global unauthenticated
+/// state.
+final class AuthForgotPasswordInProgress extends AuthState {
+  const AuthForgotPasswordInProgress();
+}
+
+/// Confirmation to display after a forgot-password submission, regardless
+/// of whether the email exists server-side (the backend intentionally does
+/// not distinguish to prevent enumeration).
+final class AuthForgotPasswordSubmitted extends AuthState {
+  const AuthForgotPasswordSubmitted();
+}
+
+/// A reset-password request (new password submission) is in flight.
+final class AuthResetPasswordInProgress extends AuthState {
+  const AuthResetPasswordInProgress();
+}
+
+/// The password reset completed successfully. The local session has been
+/// cleared; the user must sign in with the new password.
+final class AuthPasswordResetSucceeded extends AuthState {
+  const AuthPasswordResetSucceeded(this.message);
+
+  final String message;
+
+  @override
+  List<Object?> get props => [message];
+}
+
+/// The password reset failed (invalid/expired token, network, etc.).
+/// The screen should surface [error] and offer a way to request a new link.
+final class AuthPasswordResetFailed extends AuthState {
+  const AuthPasswordResetFailed(this.error);
+
+  final String error;
+
+  @override
+  List<Object?> get props => [error];
+}
+
 /// Email verification is required before the user can log in.
 ///
 /// Carries the [email] for display and an optional [token] from signup

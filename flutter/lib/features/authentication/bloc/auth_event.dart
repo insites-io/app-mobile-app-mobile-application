@@ -73,3 +73,29 @@ final class AuthPasswordChangeRequested extends AuthEvent {
   @override
   List<Object?> get props => [newPassword];
 }
+
+/// Fired when the user requests a password reset email.
+final class AuthForgotPasswordRequested extends AuthEvent {
+  const AuthForgotPasswordRequested({required this.email});
+
+  final String email;
+
+  @override
+  List<Object?> get props => [email];
+}
+
+/// Fired when the user submits a new password using a reset token.
+final class AuthResetPasswordRequested extends AuthEvent {
+  const AuthResetPasswordRequested({
+    required this.email,
+    required this.token,
+    required this.newPassword,
+  });
+
+  final String email;
+  final String token;
+  final String newPassword;
+
+  @override
+  List<Object?> get props => [email, token, newPassword];
+}

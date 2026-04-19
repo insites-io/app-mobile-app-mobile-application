@@ -13,6 +13,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthProfileUpdateRequested>(_onProfileUpdateRequested);
     on<AuthPasswordChangeRequested>(_onPasswordChangeRequested);
+    on<AuthForgotPasswordRequested>(_onForgotPasswordRequested);
+    on<AuthResetPasswordRequested>(_onResetPasswordRequested);
   }
 
   final AuthRepository authRepository;
@@ -149,6 +151,51 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await authRepository.logout();
     } finally {
       emit(const AuthUnauthenticated());
+    }
+  }
+
+  Future<void> _onForgotPasswordRequested(
+    AuthForgotPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthForgotPasswordInProgress());
+    try {
+      await authRepository.forgotPassword(event.email);
+    } on AuthException {
+      // Swallow recoverable errors so we show the same confirmation
+      // regardless of whether the email exists — prevents enumeration.
+    } on ApiException {
+      // Same rationale: treat network/API failures as a silent success
+      // to avoid leaking information. The user can retry if the email
+      // truly did not send.
+    } catch (_) {
+      // Unknown failure — still present the generic confirmation.
+    }
+    emit(const AuthForgotPasswordSubmitted());
+  }
+
+  Future<void> _onResetPasswordRequested(
+    AuthResetPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthResetPasswordInProgress());
+    try {
+      final message = await authRepository.resetPassword(
+        email: event.email,
+        token: event.token,
+        newPassword: event.newPassword,
+      );
+      // Even though the server may keep existing JWTs valid, clear any
+      // local credentials as a safety measure so the app falls back to
+      // an unauthenticated state.
+      await authRepository.secureStorage.clearAll();
+      emit(AuthPasswordResetSucceeded(message));
+    } on AuthException catch (e) {
+      emit(AuthPasswordResetFailed(e.message));
+    } on ApiException catch (e) {
+      emit(AuthPasswordResetFailed(e.message));
+    } catch (_) {
+      emit(const AuthPasswordResetFailed('An unexpected error occurred.'));
     }
   }
 }

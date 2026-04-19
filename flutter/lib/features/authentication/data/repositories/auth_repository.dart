@@ -209,6 +209,59 @@ class AuthRepository {
         'Password changed successfully. Please log in again.';
   }
 
+  /// Request a password reset email.
+  ///
+  /// The backend intentionally returns the same success response regardless
+  /// of whether the email exists, to prevent enumeration. Callers should
+  /// show the same confirmation message on success and on recoverable
+  /// failure, and only surface the error for malformed input (e.g. missing
+  /// email).
+  Future<String> forgotPassword(String email) async {
+    final response = await apiClient.post(
+      '/api/mobile/forgot-password',
+      data: {'email': email},
+    );
+
+    if (response['success'] != true) {
+      throw AuthException(
+        response['error'] as String? ?? 'Failed to request password reset.',
+      );
+    }
+
+    return response['message'] as String? ??
+        'If an account exists with that email, a password reset link has been sent.';
+  }
+
+  /// Submit a new password using the token from the reset email.
+  ///
+  /// The token is single-use and expires after 24 hours. Do not store or
+  /// cache it. On success the server invalidates the token, so callers
+  /// should route the user back to sign in rather than attempting another
+  /// reset with the same token.
+  Future<String> resetPassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) async {
+    final response = await apiClient.post(
+      '/api/mobile/reset-password',
+      data: {
+        'email': email,
+        'token': token,
+        'new_password': newPassword,
+      },
+    );
+
+    if (response['success'] != true) {
+      throw AuthException(
+        response['error'] as String? ?? 'Failed to reset password.',
+      );
+    }
+
+    return response['message'] as String? ??
+        'Password has been reset successfully. Please log in with your new password.';
+  }
+
   /// Called on app launch: validate stored JWT → fetch user → or clear state.
   Future<User?> tryRestoreSession() async {
     final isValid = await validateToken();

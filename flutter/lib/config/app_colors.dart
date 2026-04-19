@@ -12,6 +12,13 @@ class AppColors {
   static const Color textSecondary = Color(0xFF595959);
   static const Color inputBorder = Color(0xFFD1D1D1);
 
+  // Design system tokens from Figma (Insites mobile v1). Prefer these over
+  // inline hex values when matching specific Figma nodes.
+  static const Color bodyText = Color(0xFF575757);   // paragraph body copy
+  static const Color linkMuted = Color(0xFF3C3C3C);  // --text-2, inline link surround
+  static const Color linkAccent = Color(0xFF5056EF); // --platform-user, link accent
+  static const Color successBadge = Color(0xFF048801); // --alert-positive
+
   // Semantic colours
   static const Color error = Color(0xFFC62828);       // replaces Colors.red.shade600
   static const Color errorLight = Color(0xFFEF5350);  // replaces Colors.red.shade400

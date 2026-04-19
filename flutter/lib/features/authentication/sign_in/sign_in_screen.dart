@@ -8,6 +8,7 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 import '../../welcome/welcome_screen.dart';
+import '../forgot_password/forgot_password_screen.dart';
 import '../verify_email/verify_email_screen.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -168,7 +169,11 @@ class _SignInScreenState extends State<SignInScreen> {
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
                       onTap: () {
-                        // TODO: Navigate to Forgot Password
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const ForgotPasswordScreen(),
+                          ),
+                        );
                       },
                       child: Text(
                         'Forgot Password',
