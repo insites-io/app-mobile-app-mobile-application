@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../config/app_colors.dart';
 import '../authentication/bloc/auth_bloc.dart';
@@ -20,7 +21,21 @@ class ProfileTab extends StatefulWidget {
 class _ProfileTabState extends State<ProfileTab> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  static const String _appVersion = '0.0.5';
+  String _appVersion = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() {
+      _appVersion = info.version;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +106,9 @@ class _ProfileTabState extends State<ProfileTab> {
                     const SizedBox(height: 24),
                     Center(
                       child: Text(
-                        'Insites App Version $_appVersion',
+                        _appVersion.isEmpty
+                            ? 'Insites App Version'
+                            : 'Insites App Version $_appVersion',
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
