@@ -274,36 +274,16 @@ class _CocktailDetailScreenState extends State<CocktailDetailScreen>
         ? 'No ingredients listed.'
         : 'No instructions provided.';
 
-    if (content == null || content.isEmpty) {
+    if (content == null || content.trim().isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(24),
         child: Center(child: Text(emptyMessage)),
       );
     }
 
-    final lines = content
-        .split('\n')
-        .where((line) => line.trim().isNotEmpty)
-        .toList();
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (int i = 0; i < lines.length; i++)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                '${i + 1}. ${lines[i].trim()}',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                    ),
-              ),
-            ),
-        ],
-      ),
+      child: AppMarkdownView(data: content),
     );
   }
 }

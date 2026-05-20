@@ -12,14 +12,20 @@ import '../notifications/bloc/notification_event.dart';
 import '../notifications/bloc/notification_state.dart';
 import '../notifications/notifications_tab.dart';
 import '../recipes/cocktails/add_cocktail_screen.dart';
-import '../recipes/cocktails/bloc/cocktail_bloc.dart';
-import '../recipes/cocktails/bloc/cocktail_state.dart';
 import '../welcome/welcome_screen.dart';
 import 'home_tab.dart';
 import '../profile/profile_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  /// Switches the bottom-nav tab from anywhere inside the home stack.
+  /// Used by screens like AddCocktail to bounce the user back to Home
+  /// after cancelling without relying on pop, since the tabs each have
+  /// their own Navigator.
+  static void switchTab(BuildContext context, int index) {
+    context.findAncestorStateOfType<_HomeScreenState>()?._switchTab(index);
+  }
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -40,6 +46,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool get _isOnSubPage => _navObservers[_selectedIndex].isOnSubPage;
 
+  void _switchTab(int index) {
+    if (index < 0 || index >= _navigatorKeys.length) return;
+    if (_selectedIndex != index) {
+      setState(() => _selectedIndex = index);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -50,7 +63,8 @@ class _HomeScreenState extends State<HomeScreen> {
           .add(FavoritesLoadRequested(authState.user.id));
       context
           .read<NotificationBloc>()
-          .add(NotificationsLoadRequested(authState.user.id));
+        ..add(NotificationsLoadRequested(authState.user.id))
+        ..add(NotificationsCheckNewCocktails(authState.user.id));
     }
   }
 
@@ -84,25 +98,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     builder: (_) => const WelcomeScreen()),
                 (_) => false,
               );
-            }
-          },
-        ),
-        BlocListener<CocktailBloc, CocktailState>(
-          listener: (context, state) {
-            if (state is CocktailsLoaded) {
-              final authState = context.read<AuthBloc>().state;
-              if (authState is AuthAuthenticated) {
-                final ids = state.cocktails
-                    .where((c) => c.id != null)
-                    .map((c) => c.id!)
-                    .toList();
-                context.read<NotificationBloc>().add(
-                      NotificationsCheckNewCocktails(
-                        userId: authState.user.id,
-                        cocktailIds: ids,
-                      ),
-                    );
-              }
             }
           },
         ),

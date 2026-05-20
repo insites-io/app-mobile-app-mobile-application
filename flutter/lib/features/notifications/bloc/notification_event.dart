@@ -17,19 +17,16 @@ final class NotificationsLoadRequested extends NotificationEvent {
   List<Object?> get props => [userId];
 }
 
-/// Compare current cocktail IDs with known ones, creating notifications
-/// for any new cocktails.
+/// Fetch every cocktail id from the API and create notifications for any
+/// that aren't already in the known set. Pulls all pages so the diff covers
+/// the whole catalogue, not just what the list screen has scrolled to.
 final class NotificationsCheckNewCocktails extends NotificationEvent {
-  const NotificationsCheckNewCocktails({
-    required this.userId,
-    required this.cocktailIds,
-  });
+  const NotificationsCheckNewCocktails(this.userId);
 
   final String userId;
-  final List<int> cocktailIds;
 
   @override
-  List<Object?> get props => [userId, cocktailIds];
+  List<Object?> get props => [userId];
 }
 
 /// Toggle the read/unread state of a notification.

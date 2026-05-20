@@ -47,14 +47,21 @@ class _CocktailsListScreenState extends State<CocktailsListScreen> {
           Expanded(
             child: BlocBuilder<CocktailBloc, CocktailState>(
               builder: (context, state) {
+                final loaded = state is CocktailsLoaded ? state : null;
                 return AppRefreshableList<Cocktail>(
-                  items: state is CocktailsLoaded ? state.cocktails : null,
+                  items: loaded?.cocktails,
                   isLoading: state is CocktailLoading,
                   errorMessage:
                       state is CocktailError ? state.message : null,
                   emptyMessage:
                       'No cocktails yet. Add your first recipe!',
                   onRefresh: _onRefresh,
+                  isLoadingMore: loaded?.isLoadingMore ?? false,
+                  onEndReached: loaded != null && !loaded.hasReachedMax
+                      ? () => context
+                          .read<CocktailBloc>()
+                          .add(const CocktailsLoadMoreRequested())
+                      : null,
                   header: Text(
                     'Cocktails',
                     style: Theme.of(context)

@@ -18,12 +18,36 @@ class CocktailLoading extends CocktailState {
 }
 
 class CocktailsLoaded extends CocktailState {
-  const CocktailsLoaded(this.cocktails);
+  const CocktailsLoaded({
+    required this.cocktails,
+    required this.currentPage,
+    required this.totalPages,
+    this.isLoadingMore = false,
+  });
 
   final List<Cocktail> cocktails;
+  final int currentPage;
+  final int totalPages;
+  final bool isLoadingMore;
+
+  bool get hasReachedMax => currentPage >= totalPages;
+
+  CocktailsLoaded copyWith({
+    List<Cocktail>? cocktails,
+    int? currentPage,
+    int? totalPages,
+    bool? isLoadingMore,
+  }) {
+    return CocktailsLoaded(
+      cocktails: cocktails ?? this.cocktails,
+      currentPage: currentPage ?? this.currentPage,
+      totalPages: totalPages ?? this.totalPages,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
 
   @override
-  List<Object?> get props => [cocktails];
+  List<Object?> get props => [cocktails, currentPage, totalPages, isLoadingMore];
 }
 
 class CocktailAddInProgress extends CocktailState {

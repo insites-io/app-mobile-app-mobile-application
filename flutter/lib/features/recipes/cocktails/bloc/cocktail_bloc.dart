@@ -10,11 +10,14 @@ class CocktailBloc extends Bloc<CocktailEvent, CocktailState> {
   CocktailBloc({required this.cocktailRepository})
       : super(const CocktailInitial()) {
     on<CocktailsLoadRequested>(_onLoadRequested);
+    on<CocktailsLoadMoreRequested>(_onLoadMoreRequested);
     on<CocktailAddRequested>(_onAddRequested);
     on<CocktailUpdateRequested>(_onUpdateRequested);
   }
 
   final CocktailRepository cocktailRepository;
+
+  static const int _pageSize = 10;
 
   Future<void> _onLoadRequested(
     CocktailsLoadRequested event,
@@ -22,12 +25,48 @@ class CocktailBloc extends Bloc<CocktailEvent, CocktailState> {
   ) async {
     emit(const CocktailLoading());
     try {
-      final cocktails = await cocktailRepository.getCocktails();
-      emit(CocktailsLoaded(cocktails));
+      final page = await cocktailRepository.getCocktailsPage(
+        page: 1,
+        size: _pageSize,
+      );
+      emit(CocktailsLoaded(
+        cocktails: page.items,
+        currentPage: page.currentPage,
+        totalPages: page.totalPages,
+      ));
     } on ApiException catch (e) {
       emit(CocktailError(e.message));
     } catch (e) {
       emit(CocktailError('Failed to load cocktails: $e'));
+    }
+  }
+
+  Future<void> _onLoadMoreRequested(
+    CocktailsLoadMoreRequested event,
+    Emitter<CocktailState> emit,
+  ) async {
+    final current = state;
+    if (current is! CocktailsLoaded) return;
+    if (current.hasReachedMax || current.isLoadingMore) return;
+
+    emit(current.copyWith(isLoadingMore: true));
+    try {
+      final nextPage = current.currentPage + 1;
+      final page = await cocktailRepository.getCocktailsPage(
+        page: nextPage,
+        size: _pageSize,
+      );
+      emit(CocktailsLoaded(
+        cocktails: [...current.cocktails, ...page.items],
+        currentPage: page.currentPage,
+        totalPages: page.totalPages,
+      ));
+    } on ApiException catch (e) {
+      emit(current.copyWith(isLoadingMore: false));
+      emit(CocktailError(e.message));
+    } catch (e) {
+      emit(current.copyWith(isLoadingMore: false));
+      emit(CocktailError('Failed to load more cocktails: $e'));
     }
   }
 
@@ -50,9 +89,16 @@ class CocktailBloc extends Bloc<CocktailEvent, CocktailState> {
         imagePath: event.imagePath,
       );
       emit(const CocktailAddSuccess());
-      // Auto-reload list so it's fresh when navigating back
-      final cocktails = await cocktailRepository.getCocktails();
-      emit(CocktailsLoaded(cocktails));
+      // Reset to page 1 so the new (newest-first) cocktail appears at the top.
+      final page = await cocktailRepository.getCocktailsPage(
+        page: 1,
+        size: _pageSize,
+      );
+      emit(CocktailsLoaded(
+        cocktails: page.items,
+        currentPage: page.currentPage,
+        totalPages: page.totalPages,
+      ));
     } on ApiException catch (e) {
       emit(CocktailError(e.message));
     } catch (e) {
@@ -80,9 +126,16 @@ class CocktailBloc extends Bloc<CocktailEvent, CocktailState> {
         imagePath: event.imagePath,
       );
       emit(CocktailUpdateSuccess(updated));
-      // Auto-reload list so it's fresh when navigating back
-      final cocktails = await cocktailRepository.getCocktails();
-      emit(CocktailsLoaded(cocktails));
+      // Reset to page 1 so any reordering/edits are reflected.
+      final page = await cocktailRepository.getCocktailsPage(
+        page: 1,
+        size: _pageSize,
+      );
+      emit(CocktailsLoaded(
+        cocktails: page.items,
+        currentPage: page.currentPage,
+        totalPages: page.totalPages,
+      ));
     } on ApiException catch (e) {
       emit(CocktailError(e.message));
     } catch (e) {

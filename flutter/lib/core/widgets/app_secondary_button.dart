@@ -35,9 +35,16 @@ class AppSecondaryButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(_borderRadius),
           ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: fontSize),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: fontSize,
+            ),
+          ),
         ),
       ),
     );

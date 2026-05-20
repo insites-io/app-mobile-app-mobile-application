@@ -20,6 +20,7 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -43,6 +44,20 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
+  /// Case-insensitive substring match against name, keywords and ingredients.
+  /// Ingredients are included so users can search by what's in their bar
+  /// ("vodka", "gin") and surface drinks accordingly.
+  List<Cocktail> _filter(List<Cocktail> cocktails, String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return cocktails;
+    return cocktails.where((c) {
+      if (c.name.toLowerCase().contains(q)) return true;
+      if ((c.keywords ?? '').toLowerCase().contains(q)) return true;
+      if ((c.ingredients ?? '').toLowerCase().contains(q)) return true;
+      return false;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,21 +67,14 @@ class _HomeTabState extends State<HomeTab> {
         builder: (context, state) {
           final cocktails =
               state is CocktailsLoaded ? state.cocktails : <Cocktail>[];
-
-          // Sort by rating descending for "Most Popular"
-          final popular = List<Cocktail>.from(cocktails)
-            ..sort((a, b) =>
-                (b.rating ?? 0).compareTo(a.rating ?? 0));
-          final mostPopular = popular.take(4).toList();
-
-          // Reverse list order for "Newly Added" (latest items last from API)
-          final newlyAdded = cocktails.reversed.take(4).toList();
+          final isSearching = _searchQuery.trim().isNotEmpty;
 
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
                 child: _HomeHeader(
-                  onSearchChanged: (_) {},
+                  onSearchChanged: (value) =>
+                      setState(() => _searchQuery = value),
                 ),
               ),
               SliverToBoxAdapter(
@@ -76,63 +84,18 @@ class _HomeTabState extends State<HomeTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 20),
-                      PromoBanner(
-                        title: 'Cocktail Party',
-                        subtitle: 'We got you!',
-                        buttonLabel: 'SEE ALL RECIPES',
-                        backgroundImagePath:
-                            'assets/images/Home-Banner.webp',
-                        onButtonTap: _navigateToList,
-                      ),
-                      const SizedBox(height: 32),
-                      SectionHeader(
-                        title: 'Most Popular',
-                        seeAllOnTap: _navigateToList,
-                      ),
-                      SizedBox(
-                        height: 200,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: mostPopular.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(width: 16),
-                          itemBuilder: (context, index) {
-                            final cocktail = mostPopular[index];
-                            return CocktailCard(
-                              key: ValueKey(cocktail.id),
-                              imageUrl: cocktail.image,
-                              name: cocktail.name,
-                              rating: cocktail.rating,
-                              onTap: () => _navigateToDetail(cocktail),
-                            );
-                          },
+                      if (isSearching)
+                        _SearchResults(
+                          query: _searchQuery,
+                          results: _filter(cocktails, _searchQuery),
+                          onCocktailTap: _navigateToDetail,
+                        )
+                      else
+                        _DefaultHomeBody(
+                          cocktails: cocktails,
+                          onSeeAll: _navigateToList,
+                          onCocktailTap: _navigateToDetail,
                         ),
-                      ),
-                      const SizedBox(height: 32),
-                      SectionHeader(
-                        title: 'Newly Added',
-                        seeAllOnTap: _navigateToList,
-                      ),
-                      SizedBox(
-                        height: 200,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: newlyAdded.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(width: 16),
-                          itemBuilder: (context, index) {
-                            final cocktail = newlyAdded[index];
-                            return CocktailCard(
-                              key: ValueKey(cocktail.id),
-                              imageUrl: cocktail.image,
-                              name: cocktail.name,
-                              rating: cocktail.rating,
-                              onTap: () => _navigateToDetail(cocktail),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
@@ -141,6 +104,158 @@ class _HomeTabState extends State<HomeTab> {
           );
         },
       ),
+    );
+  }
+}
+
+class _DefaultHomeBody extends StatelessWidget {
+  const _DefaultHomeBody({
+    required this.cocktails,
+    required this.onSeeAll,
+    required this.onCocktailTap,
+  });
+
+  final List<Cocktail> cocktails;
+  final VoidCallback onSeeAll;
+  final ValueChanged<Cocktail> onCocktailTap;
+
+  @override
+  Widget build(BuildContext context) {
+    // Sort by rating descending for "Most Popular"
+    final popular = List<Cocktail>.from(cocktails)
+      ..sort((a, b) => (b.rating ?? 0).compareTo(a.rating ?? 0));
+    final mostPopular = popular.take(4).toList();
+
+    // API returns newest-first (sort_order=desc), so the first items are
+    // the most recently added.
+    final newlyAdded = cocktails.take(4).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        PromoBanner(
+          title: 'Cocktail Party',
+          subtitle: 'We got you!',
+          buttonLabel: 'SEE ALL RECIPES',
+          backgroundImagePath: 'assets/images/Home-Banner.webp',
+          onButtonTap: onSeeAll,
+        ),
+        const SizedBox(height: 32),
+        SectionHeader(title: 'Most Popular', seeAllOnTap: onSeeAll),
+        _HorizontalCocktailRow(
+          cocktails: mostPopular,
+          onCocktailTap: onCocktailTap,
+        ),
+        const SizedBox(height: 32),
+        SectionHeader(title: 'Newly Added', seeAllOnTap: onSeeAll),
+        _HorizontalCocktailRow(
+          cocktails: newlyAdded,
+          onCocktailTap: onCocktailTap,
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+}
+
+class _HorizontalCocktailRow extends StatelessWidget {
+  const _HorizontalCocktailRow({
+    required this.cocktails,
+    required this.onCocktailTap,
+  });
+
+  final List<Cocktail> cocktails;
+  final ValueChanged<Cocktail> onCocktailTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 200,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: cocktails.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 16),
+        itemBuilder: (context, index) {
+          final cocktail = cocktails[index];
+          return CocktailCard(
+            key: ValueKey(cocktail.id),
+            imageUrl: cocktail.image,
+            name: cocktail.name,
+            rating: cocktail.rating,
+            onTap: () => onCocktailTap(cocktail),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SearchResults extends StatelessWidget {
+  const _SearchResults({
+    required this.query,
+    required this.results,
+    required this.onCocktailTap,
+  });
+
+  final String query;
+  final List<Cocktail> results;
+  final ValueChanged<Cocktail> onCocktailTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final headline = results.isEmpty
+        ? 'No matches for "$query"'
+        : '${results.length} result${results.length == 1 ? '' : 's'} '
+            'for "$query"';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          headline,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (results.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            child: Center(
+              child: Text(
+                'Try a different name, keyword, or ingredient.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          )
+        else
+          GridView.builder(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 0.78,
+            ),
+            itemCount: results.length,
+            itemBuilder: (context, index) {
+              final cocktail = results[index];
+              return CocktailCard(
+                key: ValueKey(cocktail.id),
+                imageUrl: cocktail.image,
+                name: cocktail.name,
+                rating: cocktail.rating,
+                onTap: () => onCocktailTap(cocktail),
+              );
+            },
+          ),
+      ],
     );
   }
 }

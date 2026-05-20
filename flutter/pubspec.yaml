@@ -45,6 +45,7 @@ dependencies:
   url_launcher: ^6.3.2
   app_links: ^6.3.2
   package_info_plus: ^8.1.2
+  flutter_markdown: ^0.7.7
 
 dev_dependencies:
   flutter_test:

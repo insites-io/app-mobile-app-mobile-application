@@ -141,6 +141,7 @@ class _InsitesAppState extends State<InsitesApp> {
           BlocProvider(
             create: (_) => NotificationBloc(
               notificationRepository: widget.notificationRepository,
+              cocktailRepository: widget.cocktailRepository,
             ),
           ),
         ],

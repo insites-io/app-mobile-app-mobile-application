@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/widgets/widgets.dart';
+import '../../home/home_screen.dart';
 import 'bloc/cocktail_bloc.dart';
 import 'bloc/cocktail_event.dart';
 import 'bloc/cocktail_state.dart';
@@ -281,7 +282,10 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
                                       ? null
                                       : _isEditing
                                           ? () => Navigator.of(context).pop()
-                                          : _clearForm,
+                                          : () {
+                                              _clearForm();
+                                              HomeScreen.switchTab(context, 0);
+                                            },
                                 ),
                               ),
                               const SizedBox(width: 16),

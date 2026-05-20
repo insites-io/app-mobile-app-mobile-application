@@ -7,9 +7,14 @@ abstract class CocktailEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Load all cocktails from the database.
+/// Load the first page of cocktails from the database.
 class CocktailsLoadRequested extends CocktailEvent {
   const CocktailsLoadRequested();
+}
+
+/// Append the next page of cocktails to the currently loaded list.
+class CocktailsLoadMoreRequested extends CocktailEvent {
+  const CocktailsLoadMoreRequested();
 }
 
 /// Submit a new cocktail to the database.

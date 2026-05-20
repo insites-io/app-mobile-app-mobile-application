@@ -1,12 +1,15 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../recipes/cocktails/data/repositories/cocktail_repository.dart';
 import '../data/repositories/notification_repository.dart';
 import 'notification_event.dart';
 import 'notification_state.dart';
 
 class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
-  NotificationBloc({required this.notificationRepository})
-      : super(const NotificationInitial()) {
+  NotificationBloc({
+    required this.notificationRepository,
+    required this.cocktailRepository,
+  }) : super(const NotificationInitial()) {
     on<NotificationsLoadRequested>(_onLoadRequested);
     on<NotificationsCheckNewCocktails>(_onCheckNewCocktails);
     on<NotificationToggleRead>(_onToggleRead);
@@ -14,6 +17,7 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   }
 
   final NotificationRepository notificationRepository;
+  final CocktailRepository cocktailRepository;
 
   Future<void> _onLoadRequested(
     NotificationsLoadRequested event,
@@ -28,11 +32,16 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     NotificationsCheckNewCocktails event,
     Emitter<NotificationState> emit,
   ) async {
-    final notifications = await notificationRepository.checkNewCocktails(
-      event.userId,
-      event.cocktailIds,
-    );
-    emit(NotificationsLoaded(notifications));
+    try {
+      final allIds = await cocktailRepository.getAllCocktailIds();
+      final notifications = await notificationRepository.checkNewCocktails(
+        event.userId,
+        allIds,
+      );
+      emit(NotificationsLoaded(notifications));
+    } catch (_) {
+      // Swallow: a failed diff shouldn't replace the currently shown list.
+    }
   }
 
   Future<void> _onToggleRead(

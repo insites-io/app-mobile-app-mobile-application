@@ -44,9 +44,16 @@ class AppPrimaryButton extends StatelessWidget {
                   color: Colors.white,
                 ),
               )
-            : Text(
-                label,
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: fontSize),
+            : FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: fontSize,
+                  ),
+                ),
               ),
       ),
     );

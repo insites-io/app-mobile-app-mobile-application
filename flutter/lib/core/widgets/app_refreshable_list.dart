@@ -15,6 +15,8 @@ class AppRefreshableList<T> extends StatelessWidget {
     this.emptyMessage = 'No items yet.',
     this.header,
     this.padding = const EdgeInsets.fromLTRB(20, 20, 20, 32),
+    this.onEndReached,
+    this.isLoadingMore = false,
   });
 
   final List<T>? items;
@@ -25,6 +27,15 @@ class AppRefreshableList<T> extends StatelessWidget {
   final String emptyMessage;
   final Widget? header;
   final EdgeInsetsGeometry padding;
+
+  /// Called when the user scrolls within ~200px of the bottom. Use to trigger
+  /// the next page in an infinite-scroll list. Safe to invoke repeatedly —
+  /// the caller is expected to guard against duplicate loads.
+  final VoidCallback? onEndReached;
+
+  /// When true, shows a small spinner below the last item to indicate that
+  /// the next page is being fetched.
+  final bool isLoadingMore;
 
   @override
   Widget build(BuildContext context) {
@@ -47,24 +58,48 @@ class AppRefreshableList<T> extends StatelessWidget {
     }
 
     final hasHeader = header != null;
-    final itemCount = items!.length + (hasHeader ? 1 : 0);
+    final hasFooter = isLoadingMore;
+    final itemCount =
+        items!.length + (hasHeader ? 1 : 0) + (hasFooter ? 1 : 0);
 
     return RefreshIndicator(
       onRefresh: onRefresh,
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: padding,
-        itemCount: itemCount,
-        itemBuilder: (context, index) {
-          if (hasHeader && index == 0) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: header,
-            );
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (onEndReached != null &&
+              notification.metrics.pixels >=
+                  notification.metrics.maxScrollExtent - 200) {
+            onEndReached!();
           }
-          final itemIndex = hasHeader ? index - 1 : index;
-          return itemBuilder(context, items![itemIndex]);
+          return false;
         },
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: padding,
+          itemCount: itemCount,
+          itemBuilder: (context, index) {
+            if (hasHeader && index == 0) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: header,
+              );
+            }
+            if (hasFooter && index == itemCount - 1) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              );
+            }
+            final itemIndex = hasHeader ? index - 1 : index;
+            return itemBuilder(context, items![itemIndex]);
+          },
+        ),
       ),
     );
   }
