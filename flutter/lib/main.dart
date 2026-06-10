@@ -70,7 +70,7 @@ class InsitesApp extends StatefulWidget {
   State<InsitesApp> createState() => _InsitesAppState();
 }
 
-class _InsitesAppState extends State<InsitesApp> {
+class _InsitesAppState extends State<InsitesApp> with WidgetsBindingObserver {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   late final AuthBloc _authBloc;
   StreamSubscription<PasswordResetLink>? _resetLinkSubscription;
@@ -85,6 +85,7 @@ class _InsitesAppState extends State<InsitesApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _authBloc = AuthBloc(authRepository: widget.authRepository)
       ..add(const AuthCheckRequested());
 
@@ -102,10 +103,28 @@ class _InsitesAppState extends State<InsitesApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _resetLinkSubscription?.cancel();
     widget.deepLinkService.dispose();
     _authBloc.close();
     super.dispose();
+  }
+
+  /// Catches Universal Links / App Links that iOS (and some Android paths)
+  /// deliver via Flutter's platform navigation channel instead of through
+  /// the `app_links` plugin's user-activity hook. Without this override,
+  /// the Flutter framework returns `false` to the OS, the OS logs
+  /// "Failed to handle route information in Flutter", and iOS bounces the
+  /// user back to the web fallback page served at the redirect endpoint.
+  ///
+  /// We hand the URI to [DeepLinkService.acceptUri], which de-duplicates
+  /// against any link the `app_links` stream also surfaces and emits to
+  /// the same handler used by [_onResetLink]. Return value tells the
+  /// platform whether the URI was a recognised reset link.
+  @override
+  Future<bool> didPushRouteInformation(RouteInformation routeInformation) {
+    final accepted = widget.deepLinkService.acceptUri(routeInformation.uri);
+    return Future.value(accepted);
   }
 
   /// Listener for reset links from [DeepLinkService.resetLinkStream].

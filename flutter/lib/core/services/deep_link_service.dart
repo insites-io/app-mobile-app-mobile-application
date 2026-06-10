@@ -29,6 +29,11 @@ class DeepLinkService {
   StreamSubscription<Uri>? _subscription;
   bool _started = false;
 
+  // Dedup the last emitted link so the same Universal Link arriving via
+  // both the `app_links` stream and Flutter's platform navigation channel
+  // (`WidgetsBindingObserver.didPushRouteInformation`) is delivered once.
+  PasswordResetLink? _lastEmitted;
+
   /// A stream of password reset deep-link events. Broadcasts, so late
   /// subscribers will not receive cold-start links — use [start] to prime
   /// the stream before subscribing if that matters.
@@ -61,7 +66,31 @@ class DeepLinkService {
 
   void _handleUri(Uri uri) {
     final parsed = _tryParseResetLink(uri);
-    if (parsed != null) _resetLinks.add(parsed);
+    if (parsed != null) _emit(parsed);
+  }
+
+  /// Accept a URI sourced from outside the `app_links` plugin — typically
+  /// `WidgetsBindingObserver.didPushRouteInformation` for Universal Links
+  /// that iOS delivers via Flutter's platform navigation channel.
+  ///
+  /// Returns `true` if the URI was recognised as a password reset link
+  /// (in which case it has been emitted on [resetLinkStream]), `false`
+  /// otherwise. Callers can use the return value to tell the Flutter
+  /// framework whether the route information was handled.
+  bool acceptUri(Uri uri) {
+    final parsed = _tryParseResetLink(uri);
+    if (parsed == null) return false;
+    _emit(parsed);
+    return true;
+  }
+
+  void _emit(PasswordResetLink link) {
+    final last = _lastEmitted;
+    if (last != null && last.email == link.email && last.token == link.token) {
+      return;
+    }
+    _lastEmitted = link;
+    _resetLinks.add(link);
   }
 
   /// Returns a [PasswordResetLink] if [uri] is a well-formed reset link,
