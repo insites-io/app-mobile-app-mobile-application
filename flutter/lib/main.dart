@@ -75,6 +75,13 @@ class _InsitesAppState extends State<InsitesApp> {
   late final AuthBloc _authBloc;
   StreamSubscription<PasswordResetLink>? _resetLinkSubscription;
 
+  // Cold-start race buffer. `DeepLinkService.start()` awaits
+  // `getInitialLink()` from `initState`, so the first reset link can be
+  // emitted before the MaterialApp's Navigator is mounted. When that
+  // happens, [_onResetLink] stores the link here and the post-frame
+  // callback drains it after the first build.
+  PasswordResetLink? _pendingResetLink;
+
   @override
   void initState() {
     super.initState();
@@ -84,6 +91,13 @@ class _InsitesAppState extends State<InsitesApp> {
     _resetLinkSubscription =
         widget.deepLinkService.resetLinkStream.listen(_onResetLink);
     widget.deepLinkService.start();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final pending = _pendingResetLink;
+      if (pending == null || !mounted) return;
+      _pendingResetLink = null;
+      _routeToResetScreen(pending);
+    });
   }
 
   @override
@@ -94,19 +108,33 @@ class _InsitesAppState extends State<InsitesApp> {
     super.dispose();
   }
 
-  /// When a password reset deep link arrives:
-  /// 1. If the user is currently signed in, sign them out locally so they
-  ///    land on the reset flow and not a mixed-session state.
-  /// 2. Navigate to the reset screen, clearing the stack so Back does not
-  ///    return to the logged-in app.
+  /// Listener for reset links from [DeepLinkService.resetLinkStream].
+  ///
+  /// If the Navigator is mounted, routes immediately. Otherwise buffers
+  /// the link in [_pendingResetLink] for the post-frame drain registered
+  /// in [initState] — this prevents cold-start links from being dropped
+  /// when [DeepLinkService.start] resolves `getInitialLink()` before the
+  /// first build phase completes.
   Future<void> _onResetLink(PasswordResetLink link) async {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null) {
+      _pendingResetLink = link;
+      return;
+    }
+    // Clear the buffer first so the post-frame drain does not also navigate
+    // to the same screen if it has not yet fired.
+    _pendingResetLink = null;
+    await _routeToResetScreen(link);
+  }
+
+  /// Sign the user out locally if currently authenticated, then navigate
+  /// to the reset screen, clearing the stack so Back does not return to
+  /// the previous app state.
+  Future<void> _routeToResetScreen(PasswordResetLink link) async {
     final navigator = _navigatorKey.currentState;
     if (navigator == null) return;
 
     if (_authBloc.state is AuthAuthenticated) {
-      // Fire-and-forget: clear local credentials immediately so the
-      // auth UI does not briefly show the Home screen behind the reset
-      // screen if the user taps Back.
       await widget.authRepository.secureStorage.clearAll();
       _authBloc.add(const AuthLogoutRequested());
     }
