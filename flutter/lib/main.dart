@@ -16,6 +16,7 @@ import 'features/authentication/forgot_password/reset_password_screen.dart';
 import 'features/favorites/bloc/favorites_bloc.dart';
 import 'features/favorites/data/repositories/favorites_repository.dart';
 import 'features/notifications/bloc/notification_bloc.dart';
+import 'features/notifications/bloc/notification_event.dart';
 import 'features/notifications/data/repositories/notification_repository.dart';
 import 'features/recipes/cocktails/bloc/cocktail_bloc.dart';
 import 'features/recipes/cocktails/data/repositories/cocktail_repository.dart';
@@ -82,6 +83,13 @@ class _InsitesAppState extends State<InsitesApp> with WidgetsBindingObserver {
   // callback drains it after the first build.
   PasswordResetLink? _pendingResetLink;
 
+  // Debounce window for the resume-driven notification refresh. iOS in
+  // particular bounces through `inactive → resumed` for control-center
+  // pulls / Face ID prompts; without this guard we'd walk every page of
+  // cocktail IDs on every glance.
+  static const Duration _resumeCheckDebounce = Duration(seconds: 10);
+  DateTime? _lastResumeCheckAt;
+
   @override
   void initState() {
     super.initState();
@@ -108,6 +116,39 @@ class _InsitesAppState extends State<InsitesApp> with WidgetsBindingObserver {
     widget.deepLinkService.dispose();
     _authBloc.close();
     super.dispose();
+  }
+
+  /// When the app returns to the foreground we re-run the notification
+  /// diff so a cocktail added by another user (or by this user on another
+  /// device) shows up without needing a sign-out / sign-in cycle.
+  ///
+  /// Guarded on three axes:
+  /// 1. Only act on `AppLifecycleState.resumed` — ignore `inactive` /
+  ///    `paused` / `hidden` transitions.
+  /// 2. Only act when the user is authenticated; the notification check
+  ///    relies on a user id and the instance API key being available.
+  /// 3. Debounced via [_resumeCheckDebounce] so iOS's quick `inactive →
+  ///    resumed` flicks (control center, Face ID) don't hammer the API.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state != AppLifecycleState.resumed) return;
+
+    final authState = _authBloc.state;
+    if (authState is! AuthAuthenticated) return;
+
+    final now = DateTime.now();
+    final last = _lastResumeCheckAt;
+    if (last != null && now.difference(last) < _resumeCheckDebounce) return;
+    _lastResumeCheckAt = now;
+
+    // Look up NotificationBloc through the navigator's context — the
+    // navigator is a descendant of MultiBlocProvider so the read is valid.
+    final navContext = _navigatorKey.currentContext;
+    if (navContext == null) return;
+    navContext
+        .read<NotificationBloc>()
+        .add(NotificationsCheckNewCocktails(authState.user.id));
   }
 
   /// Catches Universal Links / App Links that iOS (and some Android paths)

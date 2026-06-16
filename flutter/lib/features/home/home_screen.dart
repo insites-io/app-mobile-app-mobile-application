@@ -12,6 +12,8 @@ import '../notifications/bloc/notification_event.dart';
 import '../notifications/bloc/notification_state.dart';
 import '../notifications/notifications_tab.dart';
 import '../recipes/cocktails/add_cocktail_screen.dart';
+import '../recipes/cocktails/bloc/cocktail_bloc.dart';
+import '../recipes/cocktails/bloc/cocktail_state.dart';
 import '../welcome/welcome_screen.dart';
 import 'home_tab.dart';
 import '../profile/profile_tab.dart';
@@ -33,6 +35,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  static const int _notificationsTabIndex = 1;
+  static const Duration _checkDebounce = Duration(seconds: 10);
+  DateTime? _lastCheckAt;
 
   final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
     5,
@@ -41,7 +46,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late final List<_TabNavObserver> _navObservers = List.generate(
     5,
-    (_) => _TabNavObserver(() => setState(() {})),
+    (_) => _TabNavObserver(() {
+      // Guard against the post-frame callback firing after the tab
+      // navigator has been disposed (e.g. during a route push/pop right
+      // before this State is torn down).
+      if (mounted) setState(() {});
+    }),
   );
 
   bool get _isOnSubPage => _navObservers[_selectedIndex].isOnSubPage;
@@ -50,6 +60,44 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index < 0 || index >= _navigatorKeys.length) return;
     if (_selectedIndex != index) {
       setState(() => _selectedIndex = index);
+    }
+  }
+
+  /// Fire the notification diff if the user is authenticated. When
+  /// [debounced] is true, skip if a check ran within [_checkDebounce] —
+  /// used for the resume / tab-switch paths that can fire repeatedly.
+  /// A successful add bypasses the debounce since it's a discrete user
+  /// action and the freshly added cocktail wouldn't be reflected
+  /// otherwise.
+  void _dispatchNotificationCheck({required bool debounced}) {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) return;
+    if (debounced) {
+      final now = DateTime.now();
+      final last = _lastCheckAt;
+      if (last != null && now.difference(last) < _checkDebounce) return;
+      _lastCheckAt = now;
+    } else {
+      _lastCheckAt = DateTime.now();
+    }
+    context
+        .read<NotificationBloc>()
+        .add(NotificationsCheckNewCocktails(authState.user.id));
+  }
+
+  void _onNavTap(int index) {
+    final wasOnSameTab = _selectedIndex == index;
+    if (wasOnSameTab) {
+      _navigatorKeys[index]
+          .currentState
+          ?.popUntil((route) => route.isFirst);
+    } else {
+      setState(() => _selectedIndex = index);
+      if (index == _notificationsTabIndex) {
+        // Trigger 3: refresh when the user opens the Notifications tab —
+        // matches the "I tapped the bell, show me what's new" mental model.
+        _dispatchNotificationCheck(debounced: true);
+      }
     }
   }
 
@@ -63,8 +111,9 @@ class _HomeScreenState extends State<HomeScreen> {
           .add(FavoritesLoadRequested(authState.user.id));
       context
           .read<NotificationBloc>()
-        ..add(NotificationsLoadRequested(authState.user.id))
-        ..add(NotificationsCheckNewCocktails(authState.user.id));
+          .add(NotificationsLoadRequested(authState.user.id));
+      // Seed the initial check and the debounce timestamp in one go.
+      _dispatchNotificationCheck(debounced: false);
     }
   }
 
@@ -99,6 +148,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 (_) => false,
               );
             }
+          },
+        ),
+        // Trigger 1: when the user adds a cocktail in this session, re-run
+        // the notification diff so they don't have to log out / back in to
+        // see the new entry. The check itself is idempotent (the known set
+        // dedupes), so duplicate fires are safe.
+        BlocListener<CocktailBloc, CocktailState>(
+          listenWhen: (previous, current) => current is CocktailAddSuccess,
+          listener: (context, state) {
+            _dispatchNotificationCheck(debounced: false);
           },
         ),
       ],
@@ -146,16 +205,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     (index) => _NavBarItem(
                       item: _navItems[index],
                       isSelected: _selectedIndex == index && !_isOnSubPage,
-                      badge: index == 1 && unread > 0 ? unread : null,
-                      onTap: () {
-                        if (_selectedIndex == index) {
-                          _navigatorKeys[index]
-                              .currentState
-                              ?.popUntil((route) => route.isFirst);
-                        } else {
-                          setState(() => _selectedIndex = index);
-                        }
-                      },
+                      badge: index == _notificationsTabIndex && unread > 0
+                          ? unread
+                          : null,
+                      onTap: () => _onNavTap(index),
                     ),
                   ),
                 ),
