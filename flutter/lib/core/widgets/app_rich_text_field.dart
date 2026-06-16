@@ -52,9 +52,20 @@ class _AppRichTextFieldState extends State<AppRichTextField> {
 
   // ── Editor mutations ──
 
-  /// Wrap the current selection with [marker] on both sides. If nothing is
-  /// selected, drop the markers at the caret with the caret placed between
-  /// them so the user can keep typing.
+  /// Wrap the current selection with [marker] on both sides.
+  ///
+  /// Selection rules, in order:
+  /// 1. If the user has a non-empty selection, wrap it.
+  /// 2. Otherwise, find the word at (or directly adjacent to) the caret and
+  ///    wrap that — matches Google Docs / Word / Notion UX where tapping
+  ///    Bold after typing a word bolds the whole word without forcing the
+  ///    user to select it first.
+  /// 3. If there's no adjacent word (caret on whitespace, at a line edge,
+  ///    or in an empty buffer), drop the markers at the caret and place
+  ///    the caret between them so the user can keep typing.
+  ///
+  /// After the mutation, the wrapped text is re-selected so the user can
+  /// immediately apply another format (e.g. bold then italic).
   void _wrap(String marker) {
     final controller = widget.controller;
     final selection = controller.selection;
@@ -62,25 +73,65 @@ class _AppRichTextFieldState extends State<AppRichTextField> {
     final position =
         selection.isValid ? selection.baseOffset : text.length;
     final hasRange = selection.isValid && !selection.isCollapsed;
-    final selected = hasRange ? selection.textInside(text) : '';
 
+    int wrapStart;
+    int wrapEnd;
+    if (hasRange) {
+      wrapStart = selection.start;
+      wrapEnd = selection.end;
+    } else {
+      final word = _wordRangeAt(text, position);
+      wrapStart = word.start;
+      wrapEnd = word.end;
+    }
+
+    final selected = text.substring(wrapStart, wrapEnd);
     final replacement = '$marker$selected$marker';
-    final newStart = hasRange ? selection.start : position;
-    final newEnd = hasRange ? selection.end : position;
-    final newText = text.replaceRange(newStart, newEnd, replacement);
+    final newText = text.replaceRange(wrapStart, wrapEnd, replacement);
 
     controller.text = newText;
-    if (hasRange) {
-      controller.selection = TextSelection(
-        baseOffset: newStart + marker.length,
-        extentOffset: newStart + marker.length + selected.length,
+    if (selected.isEmpty) {
+      // Empty wrap — caret goes between the markers.
+      controller.selection = TextSelection.collapsed(
+        offset: wrapStart + marker.length,
       );
     } else {
-      controller.selection = TextSelection.collapsed(
-        offset: newStart + marker.length,
+      // Re-select the wrapped text so the user can chain formatting.
+      controller.selection = TextSelection(
+        baseOffset: wrapStart + marker.length,
+        extentOffset: wrapStart + marker.length + selected.length,
       );
     }
     _focusNode.requestFocus();
+  }
+
+  /// Range of the word that contains or is directly adjacent to [position].
+  /// Returns a zero-length range at [position] when the caret is not next
+  /// to a word (whitespace, line edge, or empty buffer). "Word boundary"
+  /// treats whitespace and markdown emphasis markers (`*`, `_`) as breaks
+  /// so we don't try to wrap inside an existing `**bold**` span.
+  ({int start, int end}) _wordRangeAt(String text, int position) {
+    if (text.isEmpty) return (start: 0, end: 0);
+    final clamped = position.clamp(0, text.length);
+    int start = clamped;
+    while (start > 0 && !_isBoundary(text[start - 1])) {
+      start--;
+    }
+    int end = clamped;
+    while (end < text.length && !_isBoundary(text[end])) {
+      end++;
+    }
+    return (start: start, end: end);
+  }
+
+  bool _isBoundary(String char) {
+    if (char.isEmpty) return true;
+    final code = char.codeUnitAt(0);
+    // Whitespace family (space, tab, newline, etc.)
+    if (char.trim().isEmpty) return true;
+    // Markdown emphasis markers — don't wrap inside an existing emphasis span.
+    if (code == 0x2A /* * */ || code == 0x5F /* _ */) return true;
+    return false;
   }
 
   /// Apply a per-line prefix to every line intersecting the current selection
@@ -227,20 +278,28 @@ class _AppRichTextFieldState extends State<AppRichTextField> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _Toolbar(
-                onBold: () => _wrap('**'),
-                onItalic: () => _wrap('*'),
-                onHeading: () => _prefixLines((_) => '# '),
-                onQuote: () => _prefixLines((_) => '> '),
-                onBulletList: () => _prefixLines((_) => '- '),
-                onNumberedList: () => _prefixLines((i) => '${i + 1}. '),
-                onLink: _insertLink,
-                onImage: _insertImage,
-                onTogglePreview: _togglePreview,
-                onToggleSplit: _toggleSplit,
-                onFullscreen: _openFullscreen,
-                previewActive: _previewMode,
-                splitActive: _splitMode,
+              // ExcludeFocus prevents toolbar buttons from claiming the
+              // Flutter focus from the editor. Without this, on iOS the
+              // soft keyboard dismisses between the tap and the explicit
+              // _focusNode.requestFocus() and the user's next keystroke
+              // can land in a different field or be lost.
+              ExcludeFocus(
+                child: _Toolbar(
+                  onBold: () => _wrap('**'),
+                  onItalic: () => _wrap('*'),
+                  onHeading: () => _prefixLines((_) => '# '),
+                  onQuote: () => _prefixLines((_) => '> '),
+                  onBulletList: () => _prefixLines((_) => '- '),
+                  onNumberedList: () =>
+                      _prefixLines((i) => '${i + 1}. '),
+                  onLink: _insertLink,
+                  onImage: _insertImage,
+                  onTogglePreview: _togglePreview,
+                  onToggleSplit: _toggleSplit,
+                  onFullscreen: _openFullscreen,
+                  previewActive: _previewMode,
+                  splitActive: _splitMode,
+                ),
               ),
               _buildBody(context),
             ],
