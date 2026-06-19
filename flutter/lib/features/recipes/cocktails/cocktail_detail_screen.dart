@@ -130,6 +130,15 @@ class _CocktailDetailScreenState extends State<CocktailDetailScreen>
                                               cocktail: cocktail,
                                             ),
                                           );
+                                      // isFav reflects the state BEFORE the
+                                      // toggle, so true means we're removing
+                                      // and false means we're adding.
+                                      AppToast.show(
+                                        context,
+                                        isFav
+                                            ? 'Removed from favorites'
+                                            : 'Added to favorites',
+                                      );
                                     }
                                   },
                                   child: Row(

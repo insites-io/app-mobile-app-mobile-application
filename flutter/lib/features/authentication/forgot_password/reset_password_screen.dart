@@ -6,7 +6,6 @@ import '../../../core/widgets/widgets.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
-import 'forgot_password_screen.dart';
 import 'password_changed_screen.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
@@ -50,28 +49,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }
 
   void _showError(String error) {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.clearSnackBars();
-    messenger.showSnackBar(
-      SnackBar(
-        backgroundColor: Colors.red.shade700,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 6),
-        content: Text(error),
-        action: SnackBarAction(
-          label: 'NEW LINK',
-          textColor: Colors.white,
-          onPressed: () {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute<void>(
-                builder: (_) => const ForgotPasswordScreen(),
-              ),
-              (_) => false,
-            );
-          },
-        ),
-      ),
-    );
+    // Per Figma the toast carries no action button; users can tap the
+    // back chevron to retry the request-link flow.
+    AppToast.show(context, error, type: AppToastType.error);
   }
 
   @override

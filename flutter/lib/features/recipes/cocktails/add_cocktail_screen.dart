@@ -83,12 +83,10 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
       // Permission denied, plugin error, etc. Fail soft instead of
       // letting the exception crash the screen.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Could not access the image. Please check the app permissions.',
-          ),
-        ),
+      AppToast.show(
+        context,
+        'Could not access the image. Please check the app permissions.',
+        type: AppToastType.error,
       );
     }
   }
@@ -174,9 +172,7 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
       },
       listener: (context, state) {
         if (state is CocktailAddSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Recipe added successfully!')),
-          );
+          AppToast.show(context, 'Recipe added successfully!');
           _clearForm();
           Navigator.of(context).push(
             MaterialPageRoute<void>(
@@ -184,14 +180,10 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
             ),
           );
         } else if (state is CocktailUpdateSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Recipe updated successfully!')),
-          );
+          AppToast.show(context, 'Recipe updated successfully!');
           Navigator.of(context).pop(state.cocktail);
         } else if (state is CocktailError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
+          AppToast.show(context, state.message, type: AppToastType.error);
         }
       },
       child: Scaffold(

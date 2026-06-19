@@ -79,14 +79,12 @@ class _MyDetailsScreenState extends State<MyDetailsScreen> {
       }
     } catch (_) {
       // Permission denied, no camera available, plugin error, etc.
-      // Show a SnackBar instead of letting the exception crash the app.
+      // Surface an error toast instead of letting the exception crash.
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Could not access the image. Please check the app permissions.',
-          ),
-        ),
+      AppToast.show(
+        context,
+        'Could not access the image. Please check the app permissions.',
+        type: AppToastType.error,
       );
     }
   }
@@ -147,11 +145,10 @@ class _MyDetailsScreenState extends State<MyDetailsScreen> {
       } catch (e) {
         if (!mounted) return;
         setState(() => _isUploading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Image upload failed: $e'),
-            backgroundColor: Colors.red.shade600,
-          ),
+        AppToast.show(
+          context,
+          'Image upload failed: $e',
+          type: AppToastType.error,
         );
         return;
       }
@@ -176,17 +173,10 @@ class _MyDetailsScreenState extends State<MyDetailsScreen> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthProfileUpdated) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully.')),
-          );
+          AppToast.show(context, 'Profile updated successfully.');
           Navigator.of(context).pop();
         } else if (state is AuthProfileError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.error),
-              backgroundColor: Colors.red.shade600,
-            ),
-          );
+          AppToast.show(context, state.error, type: AppToastType.error);
         }
       },
       child: Scaffold(

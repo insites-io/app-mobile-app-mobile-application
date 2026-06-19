@@ -45,16 +45,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             MaterialPageRoute<void>(builder: (_) => const WelcomeScreen()),
             (_) => false,
           );
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
+          AppToast.show(context, state.message);
         } else if (state is AuthProfileError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.error),
-              backgroundColor: Colors.red.shade600,
-            ),
-          );
+          AppToast.show(context, state.error, type: AppToastType.error);
         }
       },
       child: Scaffold(
