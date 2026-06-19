@@ -154,7 +154,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
 
                   AppTextField(
-                    label: 'First Name',
+                    label: 'First Name *',
                     placeholder: 'First Name',
                     keyboardType: TextInputType.name,
                     controller: _firstNameController,
@@ -167,7 +167,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 20),
                   AppTextField(
-                    label: 'Last Name',
+                    label: 'Last Name *',
                     placeholder: 'Last Name',
                     keyboardType: TextInputType.name,
                     controller: _lastNameController,
@@ -180,7 +180,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 20),
                   AppTextField(
-                    label: 'Email',
+                    label: 'Email *',
                     placeholder: 'Email',
                     keyboardType: TextInputType.emailAddress,
                     controller: _emailController,
@@ -188,7 +188,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 20),
                   AppTextField(
-                    label: 'Password',
+                    label: 'Password *',
                     placeholder: 'Password',
                     obscureText: _obscurePassword,
                     controller: _passwordController,
@@ -212,7 +212,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 20),
                   AppTextField(
-                    label: 'Confirm Password',
+                    label: 'Confirm Password *',
                     placeholder: 'Confirm Password',
                     obscureText: _obscureConfirmPassword,
                     controller: _confirmPasswordController,

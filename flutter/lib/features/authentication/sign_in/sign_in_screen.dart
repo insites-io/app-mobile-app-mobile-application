@@ -140,7 +140,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
 
                   AppTextField(
-                    label: 'Email',
+                    label: 'Email *',
                     placeholder: 'Email',
                     keyboardType: TextInputType.emailAddress,
                     controller: _emailController,
@@ -153,7 +153,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                   const SizedBox(height: 20),
                   AppTextField(
-                    label: 'Password',
+                    label: 'Password *',
                     placeholder: 'Password',
                     obscureText: true,
                     controller: _passwordController,

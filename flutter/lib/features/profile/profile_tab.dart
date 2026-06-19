@@ -130,8 +130,8 @@ class _ProfileTabState extends State<ProfileTab> {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
+        title: const Text('Log Out'),
+        content: const Text('Are you sure you want to log out?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
@@ -143,7 +143,7 @@ class _ProfileTabState extends State<ProfileTab> {
               context.read<AuthBloc>().add(const AuthLogoutRequested());
             },
             child: Text(
-              'Sign Out',
+              'Log Out',
               style: TextStyle(color: AppColors.error),
             ),
           ),
