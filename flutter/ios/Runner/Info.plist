@@ -33,6 +33,10 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Insites needs access to your camera so you can take a photo for your profile or recipe.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Insites needs access to your photo library so you can choose an existing photo for your profile or recipe.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

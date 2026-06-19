@@ -70,9 +70,24 @@ class _MyDetailsScreenState extends State<MyDetailsScreen> {
     );
     if (source == null) return;
 
-    final picked = await picker.pickImage(source: source, imageQuality: 80);
-    if (picked != null) {
-      setState(() => _selectedImage = File(picked.path));
+    try {
+      final picked =
+          await picker.pickImage(source: source, imageQuality: 80);
+      if (!mounted) return;
+      if (picked != null) {
+        setState(() => _selectedImage = File(picked.path));
+      }
+    } catch (_) {
+      // Permission denied, no camera available, plugin error, etc.
+      // Show a SnackBar instead of letting the exception crash the app.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not access the image. Please check the app permissions.',
+          ),
+        ),
+      );
     }
   }
 

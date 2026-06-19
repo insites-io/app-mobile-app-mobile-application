@@ -1,5 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- required=false keeps the app installable on devices without
+         a camera (emulators, certain tablets). image_picker handles
+         the runtime permission prompt itself. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <application
         android:label="Insites"
         android:name="${applicationName}"

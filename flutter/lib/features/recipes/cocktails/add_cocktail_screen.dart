@@ -68,14 +68,28 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1200,
-      maxHeight: 1200,
-      imageQuality: 85,
-    );
-    if (picked != null) {
-      setState(() => _selectedImage = File(picked.path));
+    try {
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 85,
+      );
+      if (!mounted) return;
+      if (picked != null) {
+        setState(() => _selectedImage = File(picked.path));
+      }
+    } catch (_) {
+      // Permission denied, plugin error, etc. Fail soft instead of
+      // letting the exception crash the screen.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not access the image. Please check the app permissions.',
+          ),
+        ),
+      );
     }
   }
 
