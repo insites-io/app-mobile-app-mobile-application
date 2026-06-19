@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../config/app_colors.dart';
+import '../../../core/utils/email_validator.dart';
 import '../../../core/widgets/widgets.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -30,8 +31,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (value == null || value.trim().isEmpty) {
       return 'Email is required';
     }
-    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-    if (!emailRegex.hasMatch(value.trim())) {
+    if (!isValidEmail(value)) {
       return 'Enter a valid email address';
     }
     return null;
