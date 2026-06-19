@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -61,10 +62,20 @@ class _SplashScreenState extends State<SplashScreen> {
       child: Scaffold(
         backgroundColor: AppColors.splashBackground,
         body: Center(
-          child: SvgPicture.asset(
-            'assets/images/Insites-Logo.svg',
-            width: 250,
-            fit: BoxFit.contain,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SvgPicture.asset(
+                'assets/images/Insites-Logo.svg',
+                width: 250,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 24),
+              const CupertinoActivityIndicator(
+                color: Colors.white,
+                radius: 14,
+              ),
+            ],
           ),
         ),
       ),
