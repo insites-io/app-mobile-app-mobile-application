@@ -35,6 +35,9 @@ class AuthRepository {
 
     await secureStorage.saveToken(token);
     await secureStorage.saveEmail(email);
+    // The account is now verified-and-authenticated; any signup token
+    // stashed for the resend-verification recovery flow is dead weight.
+    await secureStorage.clearPendingSignup();
 
     // Fetch full profile from /me to get all fields (e.g. profile_picture_url)
     // that the login response may not include.
@@ -115,6 +118,11 @@ class AuthRepository {
 
     final user = User.fromJson(response['user'] as Map<String, dynamic>);
     final token = response['token'] as String;
+
+    // Stash the signup JWT so a later sign-in retry on the same
+    // unverified account can resurrect it for resend-verification,
+    // even if the user has killed the app in between.
+    await secureStorage.savePendingSignup(token: token, email: email);
 
     return (user: user, token: token);
   }

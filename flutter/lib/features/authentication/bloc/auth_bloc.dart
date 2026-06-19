@@ -46,7 +46,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthAuthenticated(user));
     } on AuthException catch (e) {
       if (e.errorCode == 'email_not_verified') {
-        emit(AuthEmailVerificationRequired(email: event.email));
+        // Restore the signup JWT (if we still have one for this email) so
+        // the verify screen's resend-email button keeps working across
+        // app restarts. Null is fine — the screen handles that branch.
+        final pendingToken = await authRepository.secureStorage
+            .getPendingSignupToken(forEmail: event.email);
+        emit(AuthEmailVerificationRequired(
+          email: event.email,
+          token: pendingToken,
+        ));
       } else {
         emit(AuthUnauthenticated(e.message));
       }

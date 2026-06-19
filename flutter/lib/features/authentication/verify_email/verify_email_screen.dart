@@ -12,8 +12,10 @@ import '../../welcome/welcome_screen.dart';
 
 /// Shown after signup or when login is rejected due to an unverified email.
 ///
-/// If [token] is provided (from signup), the user can request a verification
-/// email. If null (from a failed login), the screen only shows instructions.
+/// If [token] is provided (either fresh from signup or restored from secure
+/// storage on a sign-in retry), the user can request a verification email.
+/// If null (no pending signup on this device for this email), tapping resend
+/// surfaces a contact-support fallback message.
 class VerifyEmailScreen extends StatefulWidget {
   const VerifyEmailScreen({
     super.key,
@@ -46,7 +48,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
 
     if (widget.token == null) {
       setState(() {
-        _error = 'Please sign up again to receive a new verification email.';
+        _error =
+            "We can't send a verification email automatically. "
+            "If you can't find the original email, please contact support.";
       });
       return;
     }
