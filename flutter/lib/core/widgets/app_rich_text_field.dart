@@ -3,6 +3,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 
 import '../../config/app_colors.dart';
 import 'app_markdown_view.dart';
+import 'inline_image_text_controller.dart';
 
 /// Multi-line markdown editor with a styled toolbar.
 ///
@@ -16,12 +17,20 @@ class AppRichTextField extends StatefulWidget {
     this.label = 'Instructions',
     this.hintText,
     this.minLines = 5,
+    this.onPickImage,
   });
 
   final TextEditingController controller;
   final String label;
   final String? hintText;
   final int minLines;
+
+  /// Optional async callback invoked when the user taps the image toolbar
+  /// button. Should drive the picker + upload flow and return the public
+  /// URL of the uploaded image (or null if the user cancelled). When this
+  /// is null, the image button is hidden — the editor never asks the user
+  /// to type a URL.
+  final Future<String?> Function()? onPickImage;
 
   @override
   State<AppRichTextField> createState() => _AppRichTextFieldState();
@@ -31,6 +40,7 @@ class _AppRichTextFieldState extends State<AppRichTextField> {
   final FocusNode _focusNode = FocusNode();
   bool _previewMode = false;
   bool _splitMode = false;
+  bool _pickingImage = false;
 
   @override
   void initState() {
@@ -198,24 +208,51 @@ class _AppRichTextFieldState extends State<AppRichTextField> {
     _focusNode.requestFocus();
   }
 
-  /// Insert an image markdown snippet. The `alt` placeholder is left for the
-  /// user to overwrite — caret lands inside the URL slot so they can paste.
-  void _insertImage() {
-    final controller = widget.controller;
-    final selection = controller.selection;
-    final text = controller.text;
-    final position =
-        selection.isValid ? selection.baseOffset : text.length;
-    final replacement = '![alt](https://)';
-    final newText = text.replaceRange(position, position, replacement);
+  /// Drive the parent's image-pick callback and, on success, insert
+  /// `![image](url)` at the caret. No-op when no callback is wired or the
+  /// user cancelled the picker. We capture the caret position before the
+  /// async gap so the insertion lands where the user originally tapped,
+  /// even if they moved the caret mid-upload.
+  Future<void> _insertImage() async {
+    final picker = widget.onPickImage;
+    if (picker == null || _pickingImage) return;
 
-    controller.text = newText;
-    final urlStart = position + 'alt'.length + 4; // `![alt](`
-    final urlEnd = position + replacement.length - 1;
-    controller.selection = TextSelection(
-      baseOffset: urlStart,
-      extentOffset: urlEnd,
-    );
+    final controller = widget.controller;
+    final selectionAtStart = controller.selection;
+    final textAtStart = controller.text;
+    final insertAt = selectionAtStart.isValid
+        ? selectionAtStart.baseOffset
+        : textAtStart.length;
+
+    setState(() => _pickingImage = true);
+    String? url;
+    try {
+      url = await picker();
+    } finally {
+      if (mounted) setState(() => _pickingImage = false);
+    }
+
+    if (!mounted || url == null || url.isEmpty) return;
+
+    final replacement = '![image]($url)';
+
+    if (controller is InlineImageTextController) {
+      // Inline controller renders the image as a thumbnail card in place
+      // of the markdown — delegate so the sidecar URL list stays in sync.
+      // Re-anchor the caret against the LATEST text first so the image
+      // lands where the user originally tapped.
+      final anchor = insertAt.clamp(0, controller.text.length);
+      controller.selection = TextSelection.collapsed(offset: anchor);
+      controller.insertImage(replacement);
+    } else {
+      // Plain controller: splice the markdown into the raw text.
+      final currentText = controller.text;
+      final anchor = insertAt.clamp(0, currentText.length);
+      controller.text = currentText.replaceRange(anchor, anchor, replacement);
+      controller.selection = TextSelection.collapsed(
+        offset: anchor + replacement.length,
+      );
+    }
     _focusNode.requestFocus();
   }
 
@@ -245,6 +282,7 @@ class _AppRichTextFieldState extends State<AppRichTextField> {
           controller: widget.controller,
           label: widget.label,
           hintText: widget.hintText,
+          onPickImage: widget.onPickImage,
         ),
       ),
     );
@@ -293,7 +331,12 @@ class _AppRichTextFieldState extends State<AppRichTextField> {
                   onNumberedList: () =>
                       _prefixLines((i) => '${i + 1}. '),
                   onLink: _insertLink,
-                  onImage: _insertImage,
+                  onImage: widget.onPickImage == null
+                      ? null
+                      : () {
+                          _insertImage();
+                        },
+                  imageBusy: _pickingImage,
                   onTogglePreview: _togglePreview,
                   onToggleSplit: _toggleSplit,
                   onFullscreen: _openFullscreen,
@@ -310,9 +353,18 @@ class _AppRichTextFieldState extends State<AppRichTextField> {
   }
 
   Widget _buildBody(BuildContext context) {
+    // Preview must see fully-assembled markdown so `![image](url)` regions
+    // render as images. Inline-image controllers store `￼` placeholders
+    // in `.text` — calling `getMarkdown()` splices them back into real
+    // markdown.
+    final controller = widget.controller;
+    final previewSource = controller is InlineImageTextController
+        ? controller.getMarkdown()
+        : controller.text;
+
     if (_previewMode) {
       return _Preview(
-        text: widget.controller.text,
+        text: previewSource,
         minHeight: widget.minLines * 24.0,
       );
     }
@@ -328,7 +380,7 @@ class _AppRichTextFieldState extends State<AppRichTextField> {
           editor,
           Container(height: 1, color: AppColors.inputBorder),
           _Preview(
-            text: widget.controller.text,
+            text: previewSource,
             minHeight: widget.minLines * 12.0,
             background: Colors.grey.shade50,
           ),
@@ -353,6 +405,7 @@ class _Toolbar extends StatelessWidget {
     required this.onNumberedList,
     required this.onLink,
     required this.onImage,
+    required this.imageBusy,
     required this.onTogglePreview,
     required this.onToggleSplit,
     required this.onFullscreen,
@@ -367,7 +420,12 @@ class _Toolbar extends StatelessWidget {
   final VoidCallback onBulletList;
   final VoidCallback onNumberedList;
   final VoidCallback onLink;
-  final VoidCallback onImage;
+  /// When null, the image button is hidden — the parent didn't wire a
+  /// picker, so there's no useful action to expose.
+  final VoidCallback? onImage;
+  /// True while the parent's pick-and-upload future is in flight. The
+  /// button renders a spinner and rejects re-taps.
+  final bool imageBusy;
   final VoidCallback onTogglePreview;
   final VoidCallback onToggleSplit;
   final VoidCallback onFullscreen;
@@ -445,11 +503,14 @@ class _Toolbar extends StatelessWidget {
             tooltip: 'Link',
             onPressed: formattingDisabled ? null : onLink,
           ),
-          _ToolbarButton.icon(
-            icon: Icons.image_outlined,
-            tooltip: 'Image',
-            onPressed: formattingDisabled ? null : onImage,
-          ),
+          if (onImage != null)
+            imageBusy
+                ? _ToolbarButton.spinner(tooltip: 'Uploading image…')
+                : _ToolbarButton.icon(
+                    icon: Icons.image_outlined,
+                    tooltip: 'Image',
+                    onPressed: formattingDisabled ? null : onImage,
+                  ),
           _ToolbarButton.icon(
             icon: previewActive ? Icons.visibility_off : Icons.visibility,
             tooltip: previewActive ? 'Edit' : 'Preview',
@@ -474,12 +535,13 @@ class _Toolbar extends StatelessWidget {
 }
 
 /// A 36x36 toolbar button with a soft grey background and rounded corners.
-/// Renders either a glyph (`B`, `I`, `H`) or a Material icon.
+/// Renders either a glyph (`B`, `I`, `H`), a Material icon, or a spinner.
 class _ToolbarButton extends StatelessWidget {
   const _ToolbarButton._({
     required this.tooltip,
     required this.onPressed,
     required this.active,
+    required this.spinner,
     this.label,
     this.style,
     this.icon,
@@ -496,6 +558,7 @@ class _ToolbarButton extends StatelessWidget {
         tooltip: tooltip,
         onPressed: onPressed,
         active: active,
+        spinner: false,
         label: label,
         style: style,
       );
@@ -510,12 +573,24 @@ class _ToolbarButton extends StatelessWidget {
         tooltip: tooltip,
         onPressed: onPressed,
         active: active,
+        spinner: false,
         icon: icon,
+      );
+
+  /// A disabled, busy-looking variant — replaces an icon while an async
+  /// action (e.g. an image upload) is in flight.
+  factory _ToolbarButton.spinner({required String tooltip}) =>
+      _ToolbarButton._(
+        tooltip: tooltip,
+        onPressed: null,
+        active: false,
+        spinner: true,
       );
 
   final String tooltip;
   final VoidCallback? onPressed;
   final bool active;
+  final bool spinner;
   final String? label;
   final TextStyle? style;
   final IconData? icon;
@@ -531,6 +606,21 @@ class _ToolbarButton extends StatelessWidget {
     final bg = active
         ? AppColors.primary.withValues(alpha: 0.1)
         : Colors.grey.shade200;
+    final Widget content;
+    if (spinner) {
+      content = SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+        ),
+      );
+    } else if (icon != null) {
+      content = Icon(icon, size: 20, color: fg);
+    } else {
+      content = Text(label!, style: style?.copyWith(color: fg));
+    }
     return Tooltip(
       message: tooltip,
       child: Material(
@@ -542,11 +632,7 @@ class _ToolbarButton extends StatelessWidget {
           child: SizedBox(
             width: 38,
             height: 38,
-            child: Center(
-              child: icon != null
-                  ? Icon(icon, size: 20, color: fg)
-                  : Text(label!, style: style?.copyWith(color: fg)),
-            ),
+            child: Center(child: content),
           ),
         ),
       ),
@@ -635,11 +721,13 @@ class _FullscreenEditor extends StatefulWidget {
     required this.controller,
     required this.label,
     required this.hintText,
+    required this.onPickImage,
   });
 
   final TextEditingController controller;
   final String label;
   final String? hintText;
+  final Future<String?> Function()? onPickImage;
 
   @override
   State<_FullscreenEditor> createState() => _FullscreenEditorState();
@@ -663,6 +751,7 @@ class _FullscreenEditorState extends State<_FullscreenEditor> {
           label: widget.label,
           hintText: widget.hintText,
           minLines: 12,
+          onPickImage: widget.onPickImage,
         ),
       ),
     );

@@ -1,7 +1,6 @@
-import 'package:dio/dio.dart';
-
 import '../../../../../config/api_config.dart';
 import '../../../../../core/api/api_client.dart';
+import '../../../../../core/services/image_upload_service.dart';
 import '../models/cocktail_model.dart';
 
 /// One page of cocktails plus the pagination metadata from the IIA list
@@ -36,8 +35,6 @@ class CocktailRepository {
 
   static const _itemsPath =
       '/databases/api/v2/database/${ApiConfig.cocktailsTableId}/items';
-
-  static const _credentialsPath = '/crm/api/v2/attachments/credentials';
 
   /// Fetch a single page of cocktails, sorted newest-first by id.
   ///
@@ -86,6 +83,12 @@ class CocktailRepository {
   }
 
   /// Create a new cocktail. Optionally uploads an image via S3.
+  ///
+  /// [imagePath] accepts either a local filesystem path (uploaded here)
+  /// or an already-public `http(s)://…` URL (passed through). The URL
+  /// pass-through path is what the cocktail-add screen uses today — it
+  /// uploads at pick time so save never depends on a temp file the OS
+  /// may have evicted.
   Future<Cocktail> addCocktail(
     Cocktail cocktail, {
     String? imagePath,
@@ -93,8 +96,7 @@ class CocktailRepository {
     final data = cocktail.toCreateJson();
 
     if (imagePath != null) {
-      final imageUrl = await _uploadImage(imagePath);
-      data['properties.image'] = imageUrl;
+      data['properties.image'] = await _resolveImageUrl(imagePath);
     }
 
     final response = await apiClient.jsonPost(
@@ -106,6 +108,7 @@ class CocktailRepository {
   }
 
   /// Update an existing cocktail. Optionally uploads a new image via S3.
+  /// See [addCocktail] for the [imagePath] dual-use semantics.
   Future<Cocktail> updateCocktail(
     Cocktail cocktail, {
     String? imagePath,
@@ -113,8 +116,7 @@ class CocktailRepository {
     final data = cocktail.toCreateJson();
 
     if (imagePath != null) {
-      final imageUrl = await _uploadImage(imagePath);
-      data['properties.image'] = imageUrl;
+      data['properties.image'] = await _resolveImageUrl(imagePath);
     }
 
     final response = await apiClient.jsonPut(
@@ -125,53 +127,16 @@ class CocktailRepository {
     return Cocktail.fromJson(response);
   }
 
-  /// 3-step IIA presigned S3 upload.
-  ///
-  /// 1. Fetch presigned credentials from IIA.
-  /// 2. POST the file + credentials to S3.
-  /// 3. Extract and return the uploaded file URL.
-  Future<String> _uploadImage(String filePath) async {
-    // Step 1: Get presigned credentials.
-    final creds = await apiClient.get(
-      _credentialsPath,
-      authToken: ApiConfig.iiaApiKey,
-    );
-
-    final directUploadUrl = creds['direct_upload_url'] as String;
-    final key = creds['key'] as String;
-
-    // Replace ${filename} placeholder with actual filename.
-    final fileName = filePath.split('/').last;
-    final resolvedKey = key.replaceAll(r'${filename}', fileName);
-
-    // Step 2: Upload file to S3.
-    final formData = FormData.fromMap({
-      'key': resolvedKey,
-      'policy': creds['policy'],
-      'x-amz-credential': creds['x-amz-credential'],
-      'x-amz-algorithm': creds['x-amz-algorithm'],
-      'x-amz-date': creds['x-amz-date'],
-      'x-amz-signature': creds['x-amz-signature'],
-      'success_action_status': creds['success_action_status'],
-      'acl': creds['acl'],
-      'Content-Disposition': creds['Content-Disposition'],
-      'x-amz-meta-versions': creds['x-amz-meta-versions'],
-      'x-amz-meta-acl': creds['x-amz-meta-acl'],
-      'x-amz-meta-content-disposition': creds['x-amz-meta-content-disposition'],
-      'file': await MultipartFile.fromFile(filePath, filename: fileName),
-    });
-
-    final xml = await apiClient.externalMultipartPost(
-      directUploadUrl,
-      formData: formData,
-    );
-
-    // Step 3: Extract the S3 URL from the XML response.
-    final locationMatch = RegExp(r'<Location>(.*?)</Location>').firstMatch(xml);
-    if (locationMatch == null) {
-      throw ApiException('Failed to parse S3 upload response.');
+  /// Treat an already-public URL as authoritative; otherwise upload the
+  /// local file and return the S3 URL.
+  Future<String> _resolveImageUrl(String pathOrUrl) async {
+    if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
+      return pathOrUrl;
     }
-
-    return Uri.decodeFull(locationMatch.group(1)!);
+    return uploadImageToS3(
+      apiClient: apiClient,
+      iiaApiKey: ApiConfig.iiaApiKey,
+      filePath: pathOrUrl,
+    );
   }
 }

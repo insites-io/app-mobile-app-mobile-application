@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../config/api_config.dart';
+import '../../../core/api/api_client.dart';
+import '../../../core/services/image_upload_service.dart';
+import '../../../core/widgets/inline_image_text_controller.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../home/home_screen.dart';
 import 'bloc/cocktail_bloc.dart';
@@ -27,13 +31,27 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _keywordController = TextEditingController();
-  final _instructionsController = TextEditingController();
-  final _ingredientsController = TextEditingController();
+  // Markdown-aware controllers: inline `![image](url)` segments render as
+  // image thumbnails in the editor instead of raw URL text, while the
+  // underlying markdown stays intact for save/load via [getMarkdown].
+  final _instructionsController = InlineImageTextController();
+  final _ingredientsController = InlineImageTextController();
   final _durationController = TextEditingController();
   final _amountController = TextEditingController();
 
   final List<String> _keywords = [];
+  /// Local file shown in the picker preview while the upload is in flight.
+  /// Cleared after a successful upload — the rendered preview falls back to
+  /// the network URL via [AppImagePicker.existingImageUrl].
   File? _selectedImage;
+  /// S3 URL for the hero image after upload completes. Uploading happens at
+  /// pick time so the cocktail-save step never has to re-read a temp file
+  /// that the OS may have evicted in the meantime.
+  String? _selectedImageUrl;
+  /// True while the hero-image upload is running. Disables the picker tap
+  /// and the Save button so the user can't trigger a save with a partial
+  /// state.
+  bool _heroUploading = false;
 
   bool get _isEditing => widget.cocktail != null;
 
@@ -43,8 +61,12 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
     if (_isEditing) {
       final c = widget.cocktail!;
       _nameController.text = c.name;
-      _instructionsController.text = c.instructions ?? '';
-      _ingredientsController.text = c.ingredients ?? '';
+      // Existing image is already an S3 URL — adopt it as the current
+      // hero so we don't re-upload when the user submits without picking
+      // a new one.
+      _selectedImageUrl = c.image;
+      _instructionsController.setMarkdown(c.instructions ?? '');
+      _ingredientsController.setMarkdown(c.ingredients ?? '');
       if (c.duration != null) _durationController.text = c.duration.toString();
       if (c.amount != null) _amountController.text = c.amount.toString();
       if (c.keywords != null && c.keywords!.isNotEmpty) {
@@ -67,18 +89,21 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
   }
 
   Future<void> _pickImage() async {
+    if (_heroUploading) return;
+
+    // Grab the api client BEFORE the async gap so we don't reuse a
+    // BuildContext that may have been disposed by the time the upload
+    // resolves.
+    final apiClient = context.read<ApiClient>();
     final picker = ImagePicker();
+    final XFile? picked;
     try {
-      final picked = await picker.pickImage(
+      picked = await picker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 1200,
         maxHeight: 1200,
         imageQuality: 85,
       );
-      if (!mounted) return;
-      if (picked != null) {
-        setState(() => _selectedImage = File(picked.path));
-      }
     } catch (_) {
       // Permission denied, plugin error, etc. Fail soft instead of
       // letting the exception crash the screen.
@@ -88,6 +113,120 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
         'Could not access the image. Please check the app permissions.',
         type: AppToastType.error,
       );
+      return;
+    }
+    if (picked == null || !mounted) return;
+
+    // Show the local file in the preview right away while we upload, so
+    // the user gets visual feedback. The actual save-time behaviour now
+    // relies on the URL we resolve below — not this temp file.
+    setState(() {
+      _selectedImage = File(picked!.path);
+      _heroUploading = true;
+    });
+
+    String? url;
+    try {
+      url = await uploadImageToS3(
+        apiClient: apiClient,
+        iiaApiKey: ApiConfig.iiaApiKey,
+        filePath: picked.path,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _heroUploading = false;
+        // Revert the preview — we don't want the user to think the image
+        // is committed when the upload actually failed.
+        _selectedImage = null;
+      });
+      AppToast.show(
+        context,
+        e is ApiException
+            ? e.message
+            : 'Image upload failed. Please try again.',
+        type: AppToastType.error,
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _selectedImageUrl = url;
+      // Drop the local file so the picker switches to the network
+      // preview keyed by the uploaded URL — that's the source of truth
+      // from this point on.
+      _selectedImage = null;
+      _heroUploading = false;
+    });
+  }
+
+  /// Pick from Camera or Gallery, upload via the shared S3 helper, and
+  /// hand back the public URL for the markdown editor to insert. Returns
+  /// null whenever the user cancels OR the upload fails — the editor
+  /// treats that as "do nothing", so the markdown stays clean and we
+  /// never save an empty placeholder.
+  Future<String?> _pickAndUploadInlineImage() async {
+    // Grab the ApiClient before any async gap so we don't reuse a
+    // BuildContext that may have been disposed by the time the user
+    // finishes picking.
+    final apiClient = context.read<ApiClient>();
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Camera'),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Gallery'),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return null;
+
+    final XFile? picked;
+    try {
+      picked = await picker.pickImage(
+        source: source,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 85,
+      );
+    } catch (_) {
+      if (!mounted) return null;
+      AppToast.show(
+        context,
+        'Could not access the image. Please check the app permissions.',
+        type: AppToastType.error,
+      );
+      return null;
+    }
+    if (picked == null) return null;
+
+    try {
+      return await uploadImageToS3(
+        apiClient: apiClient,
+        iiaApiKey: ApiConfig.iiaApiKey,
+        filePath: picked.path,
+      );
+    } catch (_) {
+      if (!mounted) return null;
+      AppToast.show(
+        context,
+        'Image upload failed. Please try again.',
+        type: AppToastType.error,
+      );
+      return null;
     }
   }
 
@@ -110,15 +249,17 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
 
     final name = _nameController.text.trim();
     final keywords = _keywords.isNotEmpty ? _keywords.join(', ') : null;
-    final instructions = _instructionsController.text.trim().isNotEmpty
-        ? _instructionsController.text.trim()
-        : null;
-    final ingredients = _ingredientsController.text.trim().isNotEmpty
-        ? _ingredientsController.text.trim()
-        : null;
+    final instructionsMd = _instructionsController.getMarkdown().trim();
+    final instructions = instructionsMd.isNotEmpty ? instructionsMd : null;
+    final ingredientsMd = _ingredientsController.getMarkdown().trim();
+    final ingredients = ingredientsMd.isNotEmpty ? ingredientsMd : null;
     final duration = int.tryParse(_durationController.text.trim());
     final amount = int.tryParse(_amountController.text.trim());
-    final imagePath = _selectedImage?.path;
+    // We upload the hero image at pick time, so this is always a public
+    // S3 URL by the time submit runs (or null when the user didn't pick).
+    // The repo treats `http(s)://…` values as already-uploaded — see
+    // [CocktailRepository.addCocktail].
+    final imagePath = _selectedImageUrl;
 
     if (_isEditing) {
       context.read<CocktailBloc>().add(
@@ -158,6 +299,8 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
     setState(() {
       _keywords.clear();
       _selectedImage = null;
+      _selectedImageUrl = null;
+      _heroUploading = false;
     });
   }
 
@@ -254,8 +397,11 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
                       // ── Image ──
                       AppImagePicker(
                         selectedImage: _selectedImage,
-                        existingImageUrl:
-                            _isEditing ? widget.cocktail!.image : null,
+                        // After upload completes [_selectedImage] is
+                        // cleared and we render the network preview from
+                        // [_selectedImageUrl] — which on edit-mode mount
+                        // is seeded from the cocktail's existing image.
+                        existingImageUrl: _selectedImageUrl,
                         onTap: _pickImage,
                       ),
                       const SizedBox(height: 20),
@@ -265,6 +411,7 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
                         label: 'Ingredients',
                         hintText: 'One ingredient per line',
                         controller: _ingredientsController,
+                        onPickImage: _pickAndUploadInlineImage,
                       ),
                       const SizedBox(height: 20),
 
@@ -272,6 +419,7 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
                       AppRichTextField(
                         hintText: 'Write your instructions here...',
                         controller: _instructionsController,
+                        onPickImage: _pickAndUploadInlineImage,
                       ),
                       const SizedBox(height: 32),
 
@@ -279,12 +427,16 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
                       BlocBuilder<CocktailBloc, CocktailState>(
                         builder: (context, state) {
                           final isLoading = state is CocktailAddInProgress;
+                          // Block submit while the hero image is still
+                          // uploading — otherwise we'd send a half-built
+                          // cocktail with no image URL.
+                          final disabled = isLoading || _heroUploading;
                           return Row(
                             children: [
                               Expanded(
                                 child: AppSecondaryButton(
                                   label: 'CANCEL',
-                                  onPressed: isLoading
+                                  onPressed: disabled
                                       ? null
                                       : _isEditing
                                           ? () => Navigator.of(context).pop()
@@ -298,8 +450,8 @@ class _AddCocktailScreenState extends State<AddCocktailScreen> {
                               Expanded(
                                 child: AppPrimaryButton(
                                   label: _isEditing ? 'UPDATE' : 'SAVE',
-                                  isLoading: isLoading,
-                                  onPressed: isLoading ? null : _submit,
+                                  isLoading: isLoading || _heroUploading,
+                                  onPressed: disabled ? null : _submit,
                                 ),
                               ),
                             ],

@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../config/api_config.dart';
 import '../../config/app_colors.dart';
 import '../../core/api/api_client.dart';
+import '../../core/services/image_upload_service.dart';
 import '../../core/widgets/widgets.dart';
 import '../authentication/bloc/auth_bloc.dart';
 import '../authentication/bloc/auth_event.dart';
@@ -89,47 +89,11 @@ class _MyDetailsScreenState extends State<MyDetailsScreen> {
     }
   }
 
-  Future<String?> _uploadImageToS3(String filePath) async {
-    final apiClient = context.read<ApiClient>();
-
-    final creds = await apiClient.get(
-      '/crm/api/v2/attachments/credentials',
-      authToken: ApiConfig.iiaApiKey,
-    );
-
-    final directUploadUrl = creds['direct_upload_url'] as String;
-    final key = creds['key'] as String;
-    final fileName = filePath.split('/').last;
-    final resolvedKey = key.replaceAll(r'${filename}', fileName);
-
-    final formData = FormData.fromMap({
-      'key': resolvedKey,
-      'policy': creds['policy'],
-      'x-amz-credential': creds['x-amz-credential'],
-      'x-amz-algorithm': creds['x-amz-algorithm'],
-      'x-amz-date': creds['x-amz-date'],
-      'x-amz-signature': creds['x-amz-signature'],
-      'success_action_status': creds['success_action_status'],
-      'acl': creds['acl'],
-      'Content-Disposition': creds['Content-Disposition'],
-      'x-amz-meta-versions': creds['x-amz-meta-versions'],
-      'x-amz-meta-acl': creds['x-amz-meta-acl'],
-      'x-amz-meta-content-disposition':
-          creds['x-amz-meta-content-disposition'],
-      'file': await MultipartFile.fromFile(filePath, filename: fileName),
-    });
-
-    final xml = await apiClient.externalMultipartPost(
-      directUploadUrl,
-      formData: formData,
-    );
-
-    final locationMatch =
-        RegExp(r'<Location>(.*?)</Location>').firstMatch(xml);
-    if (locationMatch == null) return null;
-
-    return Uri.decodeFull(locationMatch.group(1)!);
-  }
+  Future<String?> _uploadImageToS3(String filePath) => uploadImageToS3(
+        apiClient: context.read<ApiClient>(),
+        iiaApiKey: ApiConfig.iiaApiKey,
+        filePath: filePath,
+      );
 
   Future<void> _submit() async {
     final firstName = _firstNameController.text.trim();
