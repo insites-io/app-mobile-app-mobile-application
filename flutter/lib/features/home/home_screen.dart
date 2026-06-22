@@ -104,14 +104,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    final authState = context.read<AuthBloc>().state;
-    if (authState is AuthAuthenticated) {
+    // [authenticatedUserOf] covers AuthAuthenticated, AuthProfileUpdated,
+    // and AuthProfileError so a failed profile update doesn't silently
+    // skip seeding favorites + notifications on next Home build.
+    final user = authenticatedUserOf(context.read<AuthBloc>().state);
+    if (user != null) {
       context
           .read<FavoritesBloc>()
-          .add(FavoritesLoadRequested(authState.user.id));
+          .add(FavoritesLoadRequested(user.id));
       context
           .read<NotificationBloc>()
-          .add(NotificationsLoadRequested(authState.user.id));
+          .add(NotificationsLoadRequested(user.id));
       // Seed the initial check and the debounce timestamp in one go.
       _dispatchNotificationCheck(debounced: false);
     }

@@ -27,11 +27,12 @@ class _FavoritesTabState extends State<FavoritesTab> {
   }
 
   void _loadFavorites() {
-    final authState = context.read<AuthBloc>().state;
-    if (authState is AuthAuthenticated) {
-      context
-          .read<FavoritesBloc>()
-          .add(FavoritesLoadRequested(authState.user.id));
+    // [authenticatedUserOf] also accepts AuthProfileUpdated /
+    // AuthProfileError so a failed profile update doesn't leave the
+    // Favorites tab stuck showing the empty state.
+    final user = authenticatedUserOf(context.read<AuthBloc>().state);
+    if (user != null) {
+      context.read<FavoritesBloc>().add(FavoritesLoadRequested(user.id));
     }
   }
 
@@ -61,14 +62,23 @@ class _FavoritesTabState extends State<FavoritesTab> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          AppHeader(
-            title: 'Favorites',
-            showMenuIcon: false,
-          ),
-          Expanded(
-            child: BlocBuilder<FavoritesBloc, FavoritesState>(
+      // If the tab is first built while auth is still restoring (e.g. the
+      // user tapped Favorites right after launch, before tryRestoreSession
+      // emitted), the initState load was skipped. Listen for the
+      // transition into a user-bearing state and retry the load then.
+      body: BlocListener<AuthBloc, AuthState>(
+        listenWhen: (prev, curr) =>
+            authenticatedUserOf(prev) == null &&
+            authenticatedUserOf(curr) != null,
+        listener: (_, _) => _loadFavorites(),
+        child: Column(
+          children: [
+            AppHeader(
+              title: 'Favorites',
+              showMenuIcon: false,
+            ),
+            Expanded(
+              child: BlocBuilder<FavoritesBloc, FavoritesState>(
               builder: (context, state) {
                 if (state is! FavoritesLoaded || state.favorites.isEmpty) {
                   return Padding(
@@ -123,9 +133,10 @@ class _FavoritesTabState extends State<FavoritesTab> {
                   },
                 );
               },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

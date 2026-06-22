@@ -66,7 +66,10 @@ class _ProfileTabState extends State<ProfileTab> {
                     const SizedBox(height: 24),
                     _SectionLabel('ACCOUNT DETAILS'),
                     _MenuTile(title: 'My Details', isFirst: true, onTap: () {
-                      final user = state is AuthAuthenticated ? state.user : null;
+                      // [authenticatedUserOf] covers AuthProfileError so
+                      // the user can still open My Details right after a
+                      // failed profile update (and retry from there).
+                      final user = authenticatedUserOf(state);
                       if (user == null) return;
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(

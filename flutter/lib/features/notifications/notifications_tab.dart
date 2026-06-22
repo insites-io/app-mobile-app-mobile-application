@@ -86,8 +86,11 @@ class _NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authState = context.read<AuthBloc>().state;
-    final userId = authState is AuthAuthenticated ? authState.user.id : '';
+    // Use the broad helper so swipe-to-toggle/delete still works after a
+    // failed profile update (AuthProfileError keeps the user logged in
+    // but isn't AuthAuthenticated).
+    final user = authenticatedUserOf(context.read<AuthBloc>().state);
+    final userId = user?.id ?? '';
 
     return Dismissible(
       key: ValueKey(notification.id),

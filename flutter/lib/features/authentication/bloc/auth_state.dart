@@ -112,6 +112,22 @@ final class AuthPasswordResetFailed extends AuthState {
   List<Object?> get props => [error];
 }
 
+/// Returns the user for any auth state that carries one, or null when the
+/// user is genuinely unauthenticated / unknown.
+///
+/// This is the right check for "do I have a userId to act on?" (favorites,
+/// notifications, profile display). [AuthProfileError] still keeps the
+/// user logged in — its own doc comment promises it does — so a strict
+/// `is AuthAuthenticated` check silently breaks any flow that needs a
+/// user-id whenever a profile update fails. Routing decisions that
+/// genuinely need "fully authenticated" should keep the type check.
+User? authenticatedUserOf(AuthState state) => switch (state) {
+      AuthAuthenticated(:final user) => user,
+      AuthProfileUpdated(:final user) => user,
+      AuthProfileError(:final user) => user,
+      _ => null,
+    };
+
 /// Email verification is required before the user can log in.
 ///
 /// Carries the [email] for display and an optional [token] from signup

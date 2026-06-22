@@ -121,12 +121,19 @@ class _CocktailDetailScreenState extends State<CocktailDetailScreen>
                                     favState.isFavorite(cocktail.id);
                                 return GestureDetector(
                                   onTap: () {
-                                    final authState =
-                                        context.read<AuthBloc>().state;
-                                    if (authState is AuthAuthenticated) {
+                                    // [authenticatedUserOf] covers
+                                    // AuthAuthenticated, AuthProfileUpdated,
+                                    // and AuthProfileError — a strict
+                                    // `is AuthAuthenticated` check would
+                                    // silently no-op after any failed
+                                    // profile update until app restart.
+                                    final user = authenticatedUserOf(
+                                      context.read<AuthBloc>().state,
+                                    );
+                                    if (user != null) {
                                       context.read<FavoritesBloc>().add(
                                             FavoritesToggleRequested(
-                                              userId: authState.user.id,
+                                              userId: user.id,
                                               cocktail: cocktail,
                                             ),
                                           );
